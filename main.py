@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from fasthtml.common import *
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
+import openai
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -8,13 +9,19 @@ load_dotenv()
 # Set up the app, including daisyui and tailwind for the chat component
 tlink = Script(src="https://cdn.tailwindcss.com"),
 dlink = Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css")
-app = FastHTML(hdrs=(tlink, dlink, picolink), exts='ws')
+css = Style('.x {border:black solid 1px}  .down {position:absolute; bottom:10px; right:10px} ')
+app = FastHTML(hdrs=(tlink, dlink, picolink, css), exts='ws')
 
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 client = AsyncOpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
 )
 
-sp = """You are a helpful and concise assistant."""
+openAiCli = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
+)
+
+sp = """You are a funny and useless assistant."""
 messages = []
 
 
@@ -40,28 +47,75 @@ def ChatInput():
                  cls="input input-bordered w-full", hx_swap_oob='true')
 
 
+def WholeChat():
+    return Div(
+        Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(messages)],
+            id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
+        Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
+             ws_send=True, hx_ext="ws", ws_connect="/wscon",
+             cls="flex space-x-2 m-2"),
+        cls="card bg-base-300 rounded-box basis-[75%] ")
+
+
 # The main screen
 @app.route("/")
 def get():
-    page = Body(H1('Chatbot Demo'),
-                Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(messages)],
-                    id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
-                Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
-                     ws_send=True, hx_ext="ws", ws_connect="/wscon",
-                     cls="flex space-x-2 mt-2"),
-                cls="p-4 max-w-lg mx-auto")
-    return Title('Chatbot Demo'), page
+    global messages
+    messages = []
+    page = Body(H1('Chatbot'),
+                Div(WholeChat(),
+                    Div(cls="divider divider-horizontal"),
+                    Div(Div("", id="tutor_content"),
+                        Button("Ask Tutor",
+                               hx_post="ask_tutor",
+                               hx_target="#tutor_content",
+                               cls="btn btn-primary down"),
+                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 '),
+                    cls="flex flex-row w-full p-3")
+                )
+    return Title('Chatbot'), page
 
 
-async def cli(messages, sp, stream):
-    global client
-    msg = messages[-1]['content'] if messages else ""
+@app.route("/ask_tutor")
+async def post():
+    last_user_content = next(
+        (message["content"] for message in reversed(messages) if message["role"] == "user"),
+        None
+    )
+
+    if last_user_content is None:
+        return "Start talking with the chatbot first"
+
+    print("xxx="+last_user_content)
+
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": f"Je vais te donner le prompt d'un étudiant et "
+              "tu vas me donner un regard critique sur le style , "
+              "la grammaire et le vocabulaire utilisé: "},
+            {
+                "role": "user",
+                "content": last_user_content
+            }
+        ]
+    )
+
+    return completion.choices[0].message.content
+
+
+async def cli(messages):
+    messages_to_send = [{"role": "system", "content": sp}] + messages
     stream = await client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": msg}],
+        model="gpt-4o-mini",
+        messages=messages_to_send,
         stream=True,
     )
     return stream
+
+
+def send_tutor_responce():
+    pass
 
 
 @app.ws('/wscon')
@@ -76,7 +130,7 @@ async def ws(msg: str, send):
     await send(ChatInput())
 
     # Model response (streaming)
-    r = await cli(messages, sp=sp, stream=True)
+    r = await cli(messages)
 
     # Send an empty message with the assistant response
     messages.append({"role": "assistant", "content": ""})
@@ -87,6 +141,8 @@ async def ws(msg: str, send):
         delta = chunk.choices[0].delta.content or ""
         messages[-1]["content"] += delta
         await send(Span(delta, id=f"chat-content-{len(messages) - 1}", hx_swap_oob=swap))
+
+    send_tutor_responce()
 
 
 serve()
