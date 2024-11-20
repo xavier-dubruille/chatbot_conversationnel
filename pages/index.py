@@ -47,7 +47,10 @@ def WholeChat():
 def get():
     global messages
     messages = []
-    page = Body(H1('Chatbot'),
+    page = Body(Grid(H1("Chat with me", cls="text-2xl font-bold mb-4"),
+                     Div(A('Configure Me', href='/admin', cls="text-blue-500 hover:text-blue-700 underline"),
+                         style='text-align: right'),
+                     cls="m-3"),
                 Div(WholeChat(),
                     Div(cls="divider divider-horizontal"),
                     Div(Div("", id="tutor_content"),

@@ -27,7 +27,11 @@ def update_textarea(key: str, prompt: Prompt):
 @app.get("/admin")
 def get():
     page = Body(
-        H1("Prompts configuration", cls="text-2xl font-bold mb-4"),
+        Grid(H1("Prompts configuration", cls="text-2xl font-bold mb-4"),
+             Div(A('Back to chat', href='/', cls="text-blue-500 hover:text-blue-700 underline"),
+                 style='text-align: right'),
+             cls="m-3"),
+
         Div(
             Div(
                 H2("Main prompt (for the role playing)", cls="text-lg mb-2"),
@@ -39,7 +43,8 @@ def get():
                 cls="mb-8"
             ),
             Div(
-                H2("Tutor's Prompt. (each user prompt is a new conversation starting by this prompt followed by the student's prompt)", cls="text-lg mb-2"),
+                H2("Tutor's Prompt. (each user prompt is a new conversation starting by this prompt followed by the student's prompt)",
+                   cls="text-lg mb-2"),
                 Form(
                     Textarea(get_system_prompt('tutor'), name="content", cls="w-full border p-2 mb-4"),
                     Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded"),
