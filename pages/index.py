@@ -47,25 +47,20 @@ def WholeChat():
 def get():
     global messages
     messages = []
-    page = Body(Grid(H1("Chat with me", cls="text-2xl font-bold mb-4"),
+    page = Body(Grid(H1("Chat with me", cls="text-2xl font-bold mb-4", id="titre"),
                      Div(A('Configure Me', href='/admin', cls="text-blue-500 hover:text-blue-700 underline"),
                          style='text-align: right'),
                      cls="m-3"),
                 Div(WholeChat(),
                     Div(cls="divider divider-horizontal"),
                     Div(Div("", id="tutor_content"),
-                        Button("Ask Tutor",
-                               hx_post="ask_tutor",
-                               hx_target="#tutor_content",
-                               cls="btn btn-primary down"),
                         cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 '),
                     cls="flex flex-row w-full p-3")
                 )
     return Title('Chatbot'), page
 
 
-@app.route("/ask_tutor")
-async def post():
+async def ask_tutor():
     last_user_content = next(
         (message["content"] for message in reversed(messages) if message["role"] == "user"),
         None
@@ -114,6 +109,13 @@ async def ws(msg: str, send):
 
     # Send the user message to the user (updates the UI right away)
     await send(Div(ChatMessage(len(messages) - 1), hx_swap_oob=swap, id="chatlist"))
+
+    feedback = await ask_tutor()
+    await send(Div(
+        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
+        hx_swap_oob=swap,
+        id="tutor_content"
+    ))
 
     # Send the clear input field command to the user
     await send(ChatInput())
