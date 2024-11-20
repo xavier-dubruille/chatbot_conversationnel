@@ -59,10 +59,10 @@ def get_all_scenario():
 
 
 def update_system_prompt(scenario, what, prompt):
-    # todo: escape single/double cote !
     con = sqlite3.connect(DB_FILE)
     cur = con.cursor()
-    cur.execute(f"update system_prompt set content = '{prompt}' where what = '{what}' and scenario={scenario}")
+    cur.execute("update system_prompt set content = ? where what = ? and scenario = ?",
+                (prompt, what, scenario))
     con.commit()
     con.close()
 

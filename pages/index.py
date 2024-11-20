@@ -33,16 +33,6 @@ def ChatInput():
                  cls="input input-bordered w-full", hx_swap_oob='true')
 
 
-def WholeChat(scenario):
-    return Div(
-        Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(messages)],
-            id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
-        Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
-             ws_send=True, hx_ext="ws", ws_connect=f"/wscon?scenario={scenario}",
-             cls="flex space-x-2 m-2"),
-        cls="card bg-base-300 rounded-box basis-[75%] ")
-
-
 def ScenarioButton(scenario):
     return Div(
         A(f"{scenario[1]}(id={scenario[0]})", href=f'/s/{scenario[0]}', cls="btn btn-primary text-2xl font-bold mb-4"))
@@ -63,7 +53,7 @@ def post(scenario: Scenario):
 def get():
     all_scenarios = get_all_scenario()
     # print(all_scenarios)
-    return Body(
+    page = Body(
         Div(*[ScenarioButton(scenario) for scenario in all_scenarios],
             Form(Group(
                 Input("New Scenario", type="text", placeholder='Chat with me', name="name"),
@@ -73,6 +63,7 @@ def get():
             ),
             cls="flex flex-col items-center justify-center h-screen bg-gray-100")
     )
+    return Title("Scenario"), page
 
 
 # The main screen
@@ -80,19 +71,30 @@ def get():
 def get(scenario: int):
     global current_scenario
     current_scenario = scenario
+    print(f"Current scenario: {current_scenario}")
+
     global messages
-    messages = []
+    messages = [{"role": "assistant", "content": "Hello"}]
 
     senario_name = get_create_scenario(scenario)
+
+    chat_container = Div(
+        Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(messages)],
+            id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
+        Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
+             ws_send=True, hx_ext="ws", ws_connect="/wscon",
+             cls="flex space-x-2 m-2"),
+        cls="card bg-base-300 rounded-box basis-[75%] ")
+
     page = Body(Grid(H1(senario_name, cls="text-2xl font-bold mb-4", id="titre"),
                      Div(A('Configure Me', href=f'/s/{scenario}/admin',
                            cls="text-blue-500 hover:text-blue-700 underline"),
                          style='text-align: right'),
                      cls="m-3"),
-                Div(WholeChat(scenario),
+                Div(chat_container,
                     Div(cls="divider divider-horizontal"),
                     Div(Div("", id="tutor_content"),
-                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 '),
+                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto '),
                     cls="flex flex-row w-full p-3")
                 )
     return Title(senario_name), page
@@ -144,15 +146,8 @@ async def ws(msg: str, send):
     # Send the user message to the user (updates the UI right away)
     await send(Div(ChatMessage(len(messages) - 1), hx_swap_oob=swap, id="chatlist"))
 
-    feedback = await ask_tutor(current_scenario)
-    await send(Div(
-        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
-        hx_swap_oob=swap,
-        id="tutor_content"
-    ))
-
     # Send the clear input field command to the user
-    await send(ChatInput())
+    await send(ChatInput())  # todo: it works but we lose focus
 
     # Model response (streaming)
     r = await cli(current_scenario, messages)
@@ -166,3 +161,10 @@ async def ws(msg: str, send):
         delta = chunk.choices[0].delta.content or ""
         messages[-1]["content"] += delta
         await send(Span(delta, id=f"chat-content-{len(messages) - 1}", hx_swap_oob=swap))
+
+    feedback = await ask_tutor(current_scenario)
+    await send(Div(
+        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
+        hx_swap_oob=swap,
+        id="tutor_content"
+    ))
