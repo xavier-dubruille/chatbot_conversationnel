@@ -18,17 +18,17 @@ class Prompt:
     content: str
 
 
-@app.post("/update/{key}")
-def update_textarea(key: str, prompt: Prompt):
-    update_system_prompt(key, prompt.content)
-    return Redirect("/admin")
+@app.post("/s/{scenario}/update/{key}")
+def update_textarea(scenario: int, key: str, prompt: Prompt):
+    update_system_prompt(scenario, key, prompt.content)
+    return Redirect(f"/s/{scenario}/admin")
 
 
-@app.get("/admin")
-def get():
+@app.get("/s/{scenario}/admin")
+def get(scenario: int):
     page = Body(
-        Grid(H1("Prompts configuration", cls="text-2xl font-bold mb-4"),
-             Div(A('Back to chat', href='/', cls="text-blue-500 hover:text-blue-700 underline"),
+        Grid(H1(f"Prompts configuration (for scenario num {scenario})", cls="text-2xl font-bold mb-4"),
+             Div(A('Back to chat', href=f'/s/{scenario}', cls="text-blue-500 hover:text-blue-700 underline"),
                  style='text-align: right'),
              cls="m-3"),
 
@@ -36,9 +36,9 @@ def get():
             Div(
                 H2("Main prompt (for the role playing)", cls="text-lg mb-2"),
                 Form(
-                    Textarea(get_system_prompt('role'), name="content", cls="w-full border p-2 mb-4"),
+                    Textarea(get_system_prompt(scenario, 'role'), name="content", cls="w-full border p-2 mb-4"),
                     Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded"),
-                    hx_post='/update/role'
+                    hx_post=f'/s/{scenario}/update/role'
                 ),
                 cls="mb-8"
             ),
@@ -46,18 +46,18 @@ def get():
                 H2("Tutor's Prompt. (each user prompt is a new conversation starting by this prompt followed by the student's prompt)",
                    cls="text-lg mb-2"),
                 Form(
-                    Textarea(get_system_prompt('tutor'), name="content", cls="w-full border p-2 mb-4"),
+                    Textarea(get_system_prompt(scenario, 'tutor'), name="content", cls="w-full border p-2 mb-4"),
                     Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded"),
-                    hx_post='/update/tutor'
+                    hx_post=f'/s/{scenario}/update/tutor'
                 ),
                 cls="mb-8"
             ),
             Div(
                 H2("Prompt used to resume all current feedbacks (not yet used)", cls="text-lg mb-2"),
                 Form(
-                    Textarea(get_system_prompt('resume'), name="content", cls="w-full border p-2 mb-4"),
+                    Textarea(get_system_prompt(scenario, 'resume'), name="content", cls="w-full border p-2 mb-4"),
                     Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded"),
-                    hx_post='/update/resume'
+                    hx_post=f'/s/{scenario}/update/resume'
                 ),
                 cls="mb-8"
             ),
