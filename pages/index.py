@@ -8,6 +8,7 @@ client = apps.client
 openAiCli = apps.openAiCli
 
 messages = []
+feedback_history = []
 current_scenario = 1  # didn't want it but couldn't find a way to pass arguments to the websocket fonction ...
 
 
@@ -78,22 +79,27 @@ def get(scenario: int):
 
     senario_name = get_create_scenario(scenario)
 
-    chat_container = Div(
+    chat_elements = [
         Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(messages)],
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
         Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
              ws_send=True, hx_ext="ws", ws_connect="/wscon",
-             cls="flex space-x-2 m-2"),
-        cls="card bg-base-300 rounded-box basis-[75%] ")
+             cls="flex space-x-2 m-2")]
 
     page = Body(Grid(H1(senario_name, cls="text-2xl font-bold mb-4", id="titre"),
                      Div(A('Configure Me', href=f'/s/{scenario}/admin',
                            cls="text-blue-500 hover:text-blue-700 underline"),
                          style='text-align: right'),
                      cls="m-3"),
-                Div(chat_container,
+                Div(Div(*chat_elements,
+                        cls="card bg-base-300 rounded-box basis-[75%] "),
                     Div(cls="divider divider-horizontal"),
-                    Div(Div("", id="tutor_content"),
+                    Div(H1("Feedback with History", style="position:absolute;top:5px;font-size:29px"),
+                        Div("", id="tutor_history_content"),
+                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto '),
+                    Div(cls="divider divider-horizontal"),
+                    Div(H1("Feedback No History", style="position:absolute;top:5px;font-size:29px"),
+                        Div("", id="tutor_content"),
                         cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto '),
                     cls="flex flex-row w-full p-3")
                 )
@@ -138,6 +144,33 @@ async def cli(scenario, messages):
     return stream
 
 
+async def ask_history_tutor(current_scenario):
+    global feedback_history
+
+    last_user_content = next(
+        (message["content"] for message in reversed(messages) if message["role"] == "user"),
+        None
+    )
+
+    if last_user_content is None:
+        return "Start talking with the chatbot first"
+    # else
+    feedback_history.append({"role": "user", "content": last_user_content})
+
+    sp = get_system_prompt(current_scenario, "tutor", f"Je vais te donner le prompt d'un étudiant et "
+                                                      "tu vas me donner un regard critique sur le style , "
+                                                      "la grammaire et le vocabulaire utilisé: ")
+
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": sp}] + feedback_history,
+    )
+
+    responce = completion.choices[0].message.content
+    feedback_history.append({"role": "assistant", "content": responce})
+    return responce
+
+
 @app.ws('/wscon')
 async def ws(msg: str, send):
     messages.append({"role": "user", "content": msg.rstrip()})
@@ -167,4 +200,11 @@ async def ws(msg: str, send):
         Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
         hx_swap_oob=swap,
         id="tutor_content"
+    ))
+
+    feedback = await ask_history_tutor(current_scenario)
+    await send(Div(
+        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
+        hx_swap_oob=swap,
+        id="tutor_history_content"
     ))
