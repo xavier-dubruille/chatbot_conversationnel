@@ -16,7 +16,7 @@ current_scenario = 1  # didn't want it but couldn't find a way to pass arguments
 # Now with a unique ID for the content and the message
 def ChatMessage(msg_idx, **kwargs):
     msg = messages[msg_idx]
-    bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary'
+    bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
     return Div(Div(msg['role'], cls="chat-header"),
                Div(msg['content'],
@@ -86,7 +86,7 @@ def get(scenario: int):
              ws_send=True, hx_ext="ws", ws_connect="/wscon",
              cls="flex space-x-2 m-2")]
 
-    page = Body(Grid(H1(senario_name, cls="text-2xl font-bold mb-4", id="titre"),
+    page = Body(Grid(H1(A(senario_name, href=f'/'), cls="text-2xl font-bold mb-4", id="titre"),
                      Div(A('Configure Me', href=f'/s/{scenario}/admin',
                            cls="text-blue-500 hover:text-blue-700 underline"),
                          style='text-align: right'),
