@@ -11,6 +11,11 @@ messages = []
 feedback_history = []
 current_scenario = 1  # didn't want it but couldn't find a way to pass arguments to the websocket fonction ...
 
+ID_FEEDBACK_1 = 'id_feedback_1'
+ID_FEEDBACK_2 = 'id_feedback_2'
+ID_FEEDBACK_3 = 'id_feedback_3'
+ID_FEEDBACK_4 = 'id_feedback_4'
+
 
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
@@ -86,6 +91,8 @@ def get(scenario: int):
              ws_send=True, hx_ext="ws", ws_connect="/wscon",
              cls="flex space-x-2 m-2")]
 
+    sub_title_style = "position:relative; margin:8px; font-size:29px"
+
     page = Body(Grid(H1(A(senario_name, href=f'/'), cls="text-2xl font-bold mb-4", id="titre"),
                      Div(A('Configure Me', href=f'/s/{scenario}/admin',
                            cls="text-blue-500 hover:text-blue-700 underline"),
@@ -94,13 +101,38 @@ def get(scenario: int):
                 Div(Div(*chat_elements,
                         cls="card bg-base-300 rounded-box basis-[75%] "),
                     Div(cls="divider divider-horizontal"),
-                    Div(H1("Feedback with History", style="position:absolute;top:5px;font-size:29px"),
-                        Div("", id="tutor_history_content"),
-                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto '),
+
+                    Div(Div(H1("Feedback with History", style=sub_title_style),
+                            Div("", id="tutor_history_content"),
+                            cls='card bg-base-300 rounded-box ',
+                            style="width:100%; height:100%"
+                            ),
+                        Div(cls="divider divider-vertical"),
+                        Div(H1("Summary all messages", style=sub_title_style),
+                            Div("", id=ID_FEEDBACK_3),
+                            cls='card bg-base-300 rounded-box',
+                            style="width:100%; height:100%"
+                            ),
+                        cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
+                        style='display: flex; flex-direction: column; justify-content: center'
+                        ),
+
                     Div(cls="divider divider-horizontal"),
-                    Div(H1("Feedback No History", style="position:absolute;top:5px;font-size:29px"),
-                        Div("", id="tutor_content"),
-                        cls='card bg-base-300 rounded-box grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto '),
+                    Div(Div(H1("Feedback No History", style=sub_title_style),
+                            Div("", id="tutor_content"),
+                            cls='card bg-base-300 rounded-box ',
+                            style="width:100%; height:100%"
+                            ),
+                        Div(cls="divider divider-vertical"),
+                        Div(H1("Summary all feedbacks", style=sub_title_style),
+                            Div("", id=ID_FEEDBACK_4),
+                            cls='card bg-base-300 rounded-box',
+                            style="width:100%; height:100%"
+                            ),
+                        cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
+                        style='display: flex; flex-direction: column; justify-content: center'
+                        ),
+
                     cls="flex flex-row w-full p-3")
                 )
     return Title(senario_name), page
@@ -171,7 +203,7 @@ async def ask_history_tutor(current_scenario):
     return last_user_content, responce
 
 
-def render_feedback(last_user_message, feedback, id_to_swap):
+def render_feedback(last_user_message, feedback, id_to_swap, swap_method='beforeend'):
     return Div(
         Div(
             Span(last_user_message, cls="rounded-lg px-2",
@@ -179,9 +211,48 @@ def render_feedback(last_user_message, feedback, id_to_swap):
             Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
             style="position:relative"
         ),
-        hx_swap_oob='beforeend',
+        hx_swap_oob=swap_method,
         id=id_to_swap
     )
+
+
+async def resume_feedback(current_scenario):
+    last_user_content = next(
+        (message["content"] for message in reversed(messages) if message["role"] == "user"),
+        None
+    )
+
+    contents = [d["content"] for d in feedback_history if "content" in d and d.get("role") == "assistant"]
+    msg = "fait moi un résumé de tous ces feedbacks: \n " + " \n ================ \n".join(contents)
+    # print(msg)
+
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": msg}]
+    )
+
+    response = completion.choices[0].message.content
+    return last_user_content, response
+
+
+async def feedback_on_all_messages(current_scenario):
+    last_user_content = next(
+        (message["content"] for message in reversed(messages) if message["role"] == "user"),
+        None
+    )
+
+    contents = [d["content"] for d in messages if "content" in d and d.get("role") == "user"]
+    msg = ("fait moi un feedback (orthographe, grammaire et style) sur tous ces messages: \n "
+           + " \n ================ \n".join(contents))
+    # print(msg)
+
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": msg}]
+    )
+
+    response = completion.choices[0].message.content
+    return last_user_content, response
 
 
 @app.ws('/wscon')
@@ -214,4 +285,12 @@ async def ws(msg: str, send):
 
     last_user_message, feedback = await ask_history_tutor(current_scenario)
     feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
+    await send(feedback_rendered)
+
+    last_user_message, feedback = await feedback_on_all_messages(current_scenario)
+    feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
+    await send(feedback_rendered)
+
+    last_user_message, feedback = await resume_feedback(current_scenario)
+    feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_4, 'true')
     await send(feedback_rendered)
