@@ -113,7 +113,7 @@ async def ask_tutor(scenario):
     )
 
     if last_user_content is None:
-        return "Start talking with the chatbot first"
+        return None, "Start talking with the chatbot first"
 
     sp = get_system_prompt(scenario, "tutor", f"Je vais te donner le prompt d'un étudiant et "
                                               "tu vas me donner un regard critique sur le style , "
@@ -130,7 +130,7 @@ async def ask_tutor(scenario):
         ]
     )
 
-    return completion.choices[0].message.content
+    return last_user_content, completion.choices[0].message.content
 
 
 async def cli(scenario, messages):
@@ -153,7 +153,7 @@ async def ask_history_tutor(current_scenario):
     )
 
     if last_user_content is None:
-        return "Start talking with the chatbot first"
+        return None, "Start talking with the chatbot first"
     # else
     feedback_history.append({"role": "user", "content": last_user_content})
 
@@ -168,7 +168,20 @@ async def ask_history_tutor(current_scenario):
 
     responce = completion.choices[0].message.content
     feedback_history.append({"role": "assistant", "content": responce})
-    return responce
+    return last_user_content, responce
+
+
+def render_feedback(last_user_message, feedback, id_to_swap):
+    return Div(
+        Div(
+            Span(last_user_message, cls="rounded-lg px-2",
+                 style="position:absolute; top:0; left:0; background:#4a00ff; color:#d1dbff"),
+            Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
+            style="position:relative"
+        ),
+        hx_swap_oob='beforeend',
+        id=id_to_swap
+    )
 
 
 @app.ws('/wscon')
@@ -195,16 +208,10 @@ async def ws(msg: str, send):
         messages[-1]["content"] += delta
         await send(Span(delta, id=f"chat-content-{len(messages) - 1}", hx_swap_oob=swap))
 
-    feedback = await ask_tutor(current_scenario)
-    await send(Div(
-        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
-        hx_swap_oob=swap,
-        id="tutor_content"
-    ))
+    last_user_message, feedback = await ask_tutor(current_scenario)
+    feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
+    await send(feedback_rendered)
 
-    feedback = await ask_history_tutor(current_scenario)
-    await send(Div(
-        Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
-        hx_swap_oob=swap,
-        id="tutor_history_content"
-    ))
+    last_user_message, feedback = await ask_history_tutor(current_scenario)
+    feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
+    await send(feedback_rendered)
