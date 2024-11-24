@@ -2,6 +2,7 @@ from fasthtml.common import *
 
 from src import apps
 from src.db_utils import create_db, update_system_prompt, get_system_prompt
+from src.state import get_state
 
 app = apps.fast_app
 
@@ -19,13 +20,18 @@ class Prompt:
 
 
 @app.post("/s/{scenario}/update/{key}")
-def update_textarea(scenario: int, key: str, prompt: Prompt):
+def update_textarea(scenario: int, key: str, session, prompt: Prompt):
+    state = get_state(session)
+    state.scenario_id = scenario
+    print(state)
     update_system_prompt(scenario, key, prompt.content)
     return Redirect(f"/s/{scenario}/admin")
 
 
 @app.get("/s/{scenario}/admin")
-def get(scenario: int):
+def get(scenario: int, session):
+    state = get_state(session)
+    state.scenario_id = scenario
     page = Body(
         Grid(H1(f"Prompts configuration (for scenario num {scenario})", cls="text-2xl font-bold mb-4"),
              Div(A('Back to chat', href=f'/s/{scenario}', cls="text-blue-500 hover:text-blue-700 underline"),

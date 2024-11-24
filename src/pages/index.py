@@ -2,6 +2,7 @@ from fasthtml.common import *
 
 from src import apps
 from src.db_utils import get_all_scenario, create_default_system_prompt
+from src.state import get_state
 
 app = apps.fast_app
 
@@ -18,7 +19,9 @@ def post(scenario: Scenario):
 
 
 @app.route("/")
-def get():
+def get(session):
+    get_state(session).scenario_id = 0
+
     all_scenarios = get_all_scenario()
     # print(all_scenarios)
     page = Body(

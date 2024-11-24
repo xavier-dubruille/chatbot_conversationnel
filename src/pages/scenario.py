@@ -3,13 +3,12 @@ from fasthtml.common import *
 from src import apps
 from src.db_utils import get_create_scenario
 from src.openia_stuff import cli
+from src.state import get_state
 from src.tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
 app = apps.fast_app
 client = apps.client
 openAiCli = apps.openAiCli
-
-current_scenario = 1  # didn't want it but couldn't find a way to pass arguments to the websocket fonction ...
 
 ID_FEEDBACK_1 = 'id_feedback_1'
 ID_FEEDBACK_2 = 'id_feedback_2'
@@ -19,8 +18,7 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
-def ChatMessage(msg_idx, **kwargs):
-    msg = apps.messages[msg_idx]
+def ChatMessage(msg_idx, msg, **kwargs):
     bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
     return Div(Div(msg['role'], cls="chat-header"),
@@ -41,17 +39,17 @@ def ChatInput():
 
 # The main screen
 @app.route("/s/{scenario}")
-def get(scenario: int):
-    global current_scenario
-    current_scenario = scenario
-    print(f"Current scenario: {current_scenario}")
+def get(scenario: int, session):
+    state = get_state(session)
+    state.scenario_id = scenario
 
-    apps.messages = [{"role": "assistant", "content": "Hello"}]
+    state.messages = [{"role": "assistant", "content": "Hello"}]
+    state.tutor_feedbacks = []
 
     senario_name = get_create_scenario(scenario)
 
     chat_elements = [
-        Div(*[ChatMessage(msg_idx) for msg_idx, msg in enumerate(apps.messages)],
+        Div(*[ChatMessage(msg_idx, msg) for msg_idx, msg in enumerate(state.messages)],
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
         Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
              ws_send=True, hx_ext="ws", ws_connect="/wscon",
@@ -105,41 +103,48 @@ def get(scenario: int):
 
 
 @app.ws('/wscon')
-async def ws(msg: str, send):
-    apps.messages.append({"role": "user", "content": msg.rstrip()})
+async def ws(msg: str, send, scope):
+    state = get_state(scope.session)
+
+    state.messages.append({"role": "user", "content": msg.rstrip()})
     swap = 'beforeend'
 
     # Send the user message to the user (updates the UI right away)
-    await send(Div(ChatMessage(len(apps.messages) - 1), hx_swap_oob=swap, id="chatlist"))
+    idx = len(state.messages) - 1
+    msg = state.messages[idx]
+    await send(Div(ChatMessage(idx, msg), hx_swap_oob=swap, id="chatlist"))
 
     # Send the clear input field command to the user
     await send(ChatInput())  # todo: it works but we lose focus
 
     # Model response (streaming)
-    r = await cli(current_scenario, apps.messages)
+    r = await cli(state.scenario_id, state.messages)
 
     # Send an empty message with the assistant response
-    apps.messages.append({"role": "assistant", "content": ""})
-    await send(Div(ChatMessage(len(apps.messages) - 1), hx_swap_oob=swap, id="chatlist"))
+    state.messages.append({"role": "assistant", "content": ""})
+    idx = len(state.messages) - 1
+    msg = state.messages[idx]
+    await send(Div(ChatMessage(idx, msg), hx_swap_oob=swap, id="chatlist"))
 
     # Fill in the message content
     async for chunk in r:
         delta = chunk.choices[0].delta.content or ""
-        apps.messages[-1]["content"] += delta
-        await send(Span(delta, id=f"chat-content-{len(apps.messages) - 1}", hx_swap_oob=swap))
+        state.messages[-1]["content"] += delta
+        await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
 
-    last_user_message, feedback = await ask_tutor(current_scenario)
+    last_user_message = state.last_user_prompt
+    feedback = await ask_tutor(state)
     feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
     await send(feedback_rendered)
 
-    last_user_message, feedback = await ask_history_tutor(current_scenario)
+    feedback = await ask_history_tutor(state)
     feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
     await send(feedback_rendered)
 
-    last_user_message, feedback = await feedback_on_all_messages(current_scenario)
+    feedback = await feedback_on_all_messages(state)
     feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
     await send(feedback_rendered)
 
-    last_user_message, feedback = await resume_feedback(current_scenario)
+    feedback = await resume_feedback(state)
     feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_4, 'true')
     await send(feedback_rendered)

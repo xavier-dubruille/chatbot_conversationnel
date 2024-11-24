@@ -3,70 +3,16 @@ from fasthtml.common import *
 
 from src import apps
 from src.db_utils import get_system_prompt
+from src.state import State
 
 app = apps.fast_app
 client = apps.client
 openAiCli = apps.openAiCli
 
-current_scenario = 1  # didn't want it but couldn't find a way to pass arguments to the websocket fonction ...
-
 ID_FEEDBACK_1 = 'id_feedback_1'
 ID_FEEDBACK_2 = 'id_feedback_2'
 ID_FEEDBACK_3 = 'id_feedback_3'
 ID_FEEDBACK_4 = 'id_feedback_4'
-
-
-def get_last_user_msg():
-    return next(
-        (message["content"] for message in reversed(apps.messages) if message["role"] == "user"),
-        None
-    )
-
-
-async def ask_tutor(scenario):
-    last_user_content = get_last_user_msg()
-
-    if last_user_content is None:
-        return None, "Start talking with the chatbot first"
-
-    sp = get_system_prompt(scenario, "tutor", f"Je vais te donner le prompt d'un étudiant et "
-                                              "tu vas me donner un regard critique sur le style , "
-                                              "la grammaire et le vocabulaire utilisé: ")
-
-    completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": sp},
-            {
-                "role": "user",
-                "content": last_user_content
-            }
-        ]
-    )
-
-    return last_user_content, completion.choices[0].message.content
-
-
-async def ask_history_tutor(current_scenario):
-    last_user_content = get_last_user_msg()
-
-    if last_user_content is None:
-        return None, "Start talking with the chatbot first"
-    # else
-    apps.feedback_history.append({"role": "user", "content": last_user_content})
-
-    sp = get_system_prompt(current_scenario, "tutor", f"Je vais te donner le prompt d'un étudiant et "
-                                                      "tu vas me donner un regard critique sur le style , "
-                                                      "la grammaire et le vocabulaire utilisé: ")
-
-    completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": sp}] + apps.feedback_history,
-    )
-
-    responce = completion.choices[0].message.content
-    apps.feedback_history.append({"role": "assistant", "content": responce})
-    return last_user_content, responce
 
 
 def render_feedback(last_user_message, feedback, id_to_swap, swap_method='beforeend'):
@@ -84,10 +30,44 @@ def render_feedback(last_user_message, feedback, id_to_swap, swap_method='before
     )
 
 
-async def resume_feedback(current_scenario):
-    last_user_content = get_last_user_msg()
+async def ask_tutor(state: State):
+    sp = get_system_prompt(state.scenario_id, "tutor", f"Je vais te donner le prompt d'un étudiant et "
+                                                       "tu vas me donner un regard critique sur le style , "
+                                                       "la grammaire et le vocabulaire utilisé: ")
 
-    contents = [d["content"] for d in apps.feedback_history if "content" in d and d.get("role") == "assistant"]
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": sp},
+            {
+                "role": "user",
+                "content": state.last_user_prompt
+            }
+        ]
+    )
+
+    return completion.choices[0].message.content
+
+
+async def ask_history_tutor(state: State):
+    state.tutor_feedbacks.append({"role": "user", "content": state.last_user_prompt})
+
+    sp = get_system_prompt(state.scenario_id, "tutor", f"Je vais te donner le prompt d'un étudiant et "
+                                                       "tu vas me donner un regard critique sur le style , "
+                                                       "la grammaire et le vocabulaire utilisé: ")
+
+    completion = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": sp}] + state.tutor_feedbacks,
+    )
+
+    responce = completion.choices[0].message.content
+    state.tutor_feedbacks.append({"role": "assistant", "content": responce})
+    return responce
+
+
+async def resume_feedback(state: State):
+    contents = [d["content"] for d in state.tutor_feedbacks if "content" in d and d.get("role") == "assistant"]
     msg = "fait moi un résumé de tous ces feedbacks: \n " + " \n ================ \n".join(contents)
     # print(msg)
 
@@ -97,13 +77,11 @@ async def resume_feedback(current_scenario):
     )
 
     response = completion.choices[0].message.content
-    return last_user_content, response
+    return response
 
 
-async def feedback_on_all_messages(current_scenario):
-    last_user_content = get_last_user_msg()
-
-    contents = [d["content"] for d in apps.messages if "content" in d and d.get("role") == "user"]
+async def feedback_on_all_messages(state: State):
+    contents = [d["content"] for d in state.messages if "content" in d and d.get("role") == "user"]
     msg = ("fait moi un feedback (orthographe, grammaire et style) sur tous ces messages: \n "
            + " \n ================ \n".join(contents))
     # print(msg)
@@ -114,4 +92,4 @@ async def feedback_on_all_messages(current_scenario):
     )
 
     response = completion.choices[0].message.content
-    return last_user_content, response
+    return response
