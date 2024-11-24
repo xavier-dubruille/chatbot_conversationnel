@@ -1,3 +1,4 @@
+import markdown
 from fasthtml.common import *
 
 import apps
@@ -204,11 +205,13 @@ async def ask_history_tutor(current_scenario):
 
 
 def render_feedback(last_user_message, feedback, id_to_swap, swap_method='beforeend'):
+    # feedback_md = NotStr(f'''<zero-md><script type="text/markdown">{feedback}</script></zero-md>''')
+    feedback_md = NotStr(markdown.markdown(feedback))
     return Div(
         Div(
             Span(last_user_message, cls="rounded-lg px-2",
                  style="position:absolute; top:0; left:0; background:#4a00ff; color:#d1dbff"),
-            Div(feedback, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
+            Div(feedback_md, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
             style="position:relative"
         ),
         hx_swap_oob=swap_method,

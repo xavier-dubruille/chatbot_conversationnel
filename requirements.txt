@@ -1,4 +1,5 @@
 python-fasthtml
 uvicorn>=0.29
-python-dotenv
-openai
+python-dotenv~=1.0.1
+openai~=1.54.4
+Markdown~=3.7
