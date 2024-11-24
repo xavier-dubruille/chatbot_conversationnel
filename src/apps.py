@@ -21,3 +21,6 @@ client = AsyncOpenAI(
 openAiCli = OpenAI(
     api_key=api_key,  # This is the default and can be omitted
 )
+
+messages = []
+feedback_history = []

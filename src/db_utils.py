@@ -79,7 +79,7 @@ def create_default_system_prompt(scenario_id=-1, scenario_name="Chat with me"):
         cur.execute(f"INSERT INTO scenario(id, name) VALUES ({scenario_id}, '{scenario_name}') ")
 
     cur.execute(f"""INSERT INTO system_prompt VALUES
-            ({id}, 'role', '', "Tu es un assistant déprimé et antimatique"),
+            ({id}, 'role', '', "Tu es un assistant déprimé et antipatique"),
             ({id}, 'tutor', '',"fait un feedback inutile sur ce prompt:"),
             ({id}, 'resume', '',"") """)
     con.commit()

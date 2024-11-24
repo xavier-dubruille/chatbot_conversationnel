@@ -1,7 +1,7 @@
 from fasthtml.common import *
 
-import apps
-from db_utils import create_db, update_system_prompt, get_system_prompt
+from src import apps
+from src.db_utils import create_db, update_system_prompt, get_system_prompt
 
 app = apps.fast_app
 
