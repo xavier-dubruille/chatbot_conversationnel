@@ -1,8 +1,8 @@
 from fasthtml.common import *
 
-from src import apps
-from src.db_utils import get_all_scenario, create_default_system_prompt
-from src.state import get_state
+import apps
+from db_utils import get_all_scenario, create_default_system_prompt
+from state import get_state
 
 app = apps.fast_app
 

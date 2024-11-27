@@ -1,10 +1,10 @@
 from fasthtml.common import *
 
-from src import apps
-from src.db_utils import get_create_scenario
-from src.openia_stuff import cli
-from src.state import get_state
-from src.tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
+import apps
+from db_utils import get_create_scenario
+from openia_stuff import cli
+from state import get_state
+from tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
 app = apps.fast_app
 client = apps.client
