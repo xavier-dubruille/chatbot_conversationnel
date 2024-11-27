@@ -128,9 +128,9 @@ async def ws(msg: str, send, scope):
 
     # Fill in the message content
     async for chunk in r:
-        delta = chunk.choices[0].delta.content or ""
-        state.messages[-1]["content"] += delta
-        await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
+        if chunk.choices and (delta:=chunk.choices[0].delta.content):   # Azure OpenAI can return empty chunks
+            state.messages[-1]["content"] += delta
+            await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
 
     last_user_message = state.last_user_prompt
     feedback = await ask_tutor(state)

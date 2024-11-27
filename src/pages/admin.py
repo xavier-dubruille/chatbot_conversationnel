@@ -59,7 +59,7 @@ def get(scenario: int, session):
                 cls="mb-8"
             ),
             Div(
-                H2("Prompt used to resume all current feedbacks (not yet used)", cls="text-lg mb-2"),
+                H2("Prompt used to resume all current feedbacks", cls="text-lg mb-2"),
                 Form(
                     Textarea(get_system_prompt(scenario, 'resume'), name="content", cls="w-full border p-2 mb-4"),
                     Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded"),
