@@ -1,5 +1,5 @@
-from src import apps
-from src.db_utils import get_system_prompt
+import apps
+from db_utils import get_system_prompt
 
 app = apps.fast_app
 client = apps.client

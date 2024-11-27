@@ -1,9 +1,9 @@
 import markdown
 from fasthtml.common import *
 
-from src import apps
-from src.db_utils import get_system_prompt
-from src.state import State
+import apps
+from db_utils import get_system_prompt
+from state import State
 
 app = apps.fast_app
 client = apps.client
