@@ -68,12 +68,14 @@ async def ask_history_tutor(state: State):
 
 async def resume_feedback(state: State):
     contents = [d["content"] for d in state.tutor_feedbacks if "content" in d and d.get("role") == "assistant"]
-    msg = "fait moi un résumé de tous ces feedbacks: \n " + " \n ================ \n".join(contents)
-    # print(msg)
+    sp = get_system_prompt(state.scenario_id, "resume",
+                           f"Je vais te donner une liste de feedback, fait moi en le résumé, merci.")
+    msg = " \n ================ \n".join(contents)
+    print("voici le resume sp: " + sp)
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": msg}]
+        messages=[{"role": "system", "content": sp}, {"role": "user", "content": msg}]
     )
 
     response = completion.choices[0].message.content
@@ -81,14 +83,15 @@ async def resume_feedback(state: State):
 
 
 async def feedback_on_all_messages(state: State):
+    sp = get_system_prompt(state.scenario_id, "resume",
+                           f"Je vais te donner une liste de feedback, fait moi en le résumé, merci.")
     contents = [d["content"] for d in state.messages if "content" in d and d.get("role") == "user"]
-    msg = ("fait moi un feedback (orthographe, grammaire et style) sur tous ces messages: \n "
-           + " \n ================ \n".join(contents))
+    msg = (" \n ================ \n".join(contents))
     # print(msg)
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": msg}]
+        messages=[{"role": "system", "content": sp}, {"role": "user", "content": msg}]
     )
 
     response = completion.choices[0].message.content
