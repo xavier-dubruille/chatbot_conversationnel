@@ -1,6 +1,7 @@
 from fasthtml.common import *
 
 import apps
+from config import KEY_DESCRIPTION
 from db_utils import create_db, update_system_prompt, get_system_prompt
 from state import get_state
 
@@ -74,7 +75,16 @@ def get(scenario: int, session):
     return Title('Administration'), page
 
 
-@app.get('/test/')
+def make_config_line(k: str, v: str):
+    return Div(
+        Label(k, cls="font-medium text-gray-600"),
+        Span(v, cls="text-gray-500"),
+        Input(placeholder="Enter value",
+              cls="border-gray-300 rounded-lg p-2 w-full focus:ring focus:ring-indigo-300"),
+        cls="grid grid-cols-3 gap-4 items-center border-b pb-4")
+
+
+@app.get('/admin/')
 def test():
     script_color_dirty = NotStr("""  <script>
     document.querySelectorAll('#dynamicForm input').forEach(input => {
@@ -83,17 +93,14 @@ def test():
       });
     });
   </script>""")
-    ligne = Div(
-        Label("Code 1", cls="font-medium text-gray-600"),
-        Span("description 1", cls="text-gray-500"),
-        Input("Description 1", placeholder="enterr value hiere",
-              cls="border-gray-300 rounded-lg p-2 w-full focus:ring focus:ring-indigo-300"),
-        cls="grid grid-cols-3 gap-4 items-center border-b pb-4")
     page = Body(
         Div(
             Div(H1("Configuration", cls="text-2xl font-bold text-gray-700 mb-6"),
                 Form(
-                    ligne, ligne,
+                    *[make_config_line(k, v) for k, v in KEY_DESCRIPTION.items()],
+                    Div(Button("Save", type="submit",
+                               cls="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition"),
+                        cls="mt-6 text-right"),
                     id="dynamicForm", cls="space-y-4"
                 )),
             cls="bg-white shadow-md rounded-lg p-6 max-w-2xl w-full"
