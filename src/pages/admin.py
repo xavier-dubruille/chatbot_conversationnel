@@ -2,7 +2,7 @@ from fasthtml.common import *
 
 import apps
 from config import get_scenario_config
-from scenario_config import get_attribute_descriptions, create_exemple_scenario_config
+from scenario_config import *
 from scenario_to_db import *
 from state import get_state
 
@@ -38,6 +38,15 @@ def make_config_line(key: str, description: str, scenario: ScenarioConfig):
         cls="grid grid-cols-4 gap-4 items-center border-b pb-4")
 
 
+def Accordion(title="", content=Div(), is_checked=False):
+    return Div(
+        Input(type='radio', name='my-accordion-2', checked=is_checked),
+        Div(title, cls="collapse-title text-xl font-medium"),
+        Div(content, cls="collapse-content"),
+        cls="collapse collapse-arrow bg-base-200"
+    )
+
+
 @app.get("/s/{scenario_id}/admin")
 def get(scenario_id: int, session):
     state = get_state(session)
@@ -57,7 +66,25 @@ def get(scenario_id: int, session):
                       cls="text-blue-500 hover:text-blue-700 underline"),
                     style='text-align: right'),
                 Form(
-                    *[make_config_line(k, v, scenario_config) for k, v in get_attribute_descriptions()],
+                    Accordion("'General' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(MAIN_CAT)]), True),
+                    Accordion("'Role' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(ROLE_CAT)])),
+                    Accordion("First 'Feedback window' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(FEEDBACK1_CAT)])),
+                    Accordion("Second 'Feedback window' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(FEEDBACK2_CAT)])),
+                    Accordion("First 'Resume window' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(RESUME1_CAT)])),
+                    Accordion("Second 'Resume window' configurations",
+                              Div(*[make_config_line(k, v, scenario_config) for k, v in
+                                    get_attribute_descriptions(RESUME2_CAT)])),
+
                     Div(Button("Save", type="submit",
                                cls="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition"),
                         cls="mt-6 text-right"),
