@@ -19,10 +19,11 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
-def ChatMessage(msg_idx, msg, **kwargs):
+def ChatMessage(msg_idx, msg, bot_name: str, **kwargs):
     bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
-    return Div(Div(msg['role'], cls="chat-header"),
+    who = bot_name if msg['role'] == 'assistant' else msg['role']
+    return Div(Div(who, cls="chat-header"),
                Div(msg['content'],
                    id=f"chat-content-{msg_idx}",  # Target if updating the content
                    cls=f"chat-bubble {bubble_class}"),
@@ -50,7 +51,7 @@ def get(scenario_id: int, session):
     state.tutor_feedbacks = []
 
     chat_elements = [
-        Div(*[ChatMessage(msg_idx, msg) for msg_idx, msg in enumerate(state.messages)],
+        Div(*[ChatMessage(msg_idx, msg, scenario_config.bot_name) for msg_idx, msg in enumerate(state.messages)],
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
         Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
              ws_send=True, hx_ext="ws", ws_connect="/wscon",
@@ -106,6 +107,7 @@ def get(scenario_id: int, session):
 @app.ws('/wscon')
 async def ws(msg: str, send, scope):
     state = get_state(scope.session)
+    scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
 
     state.messages.append({"role": "user", "content": msg.rstrip()})
     swap = 'beforeend'
@@ -113,7 +115,7 @@ async def ws(msg: str, send, scope):
     # Send the user message to the user (updates the UI right away)
     idx = len(state.messages) - 1
     msg = state.messages[idx]
-    await send(Div(ChatMessage(idx, msg), hx_swap_oob=swap, id="chatlist"))
+    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name), hx_swap_oob=swap, id="chatlist"))
 
     # Send the clear input field command to the user
     await send(ChatInput())  # todo: it works but we lose focus
@@ -125,7 +127,7 @@ async def ws(msg: str, send, scope):
     state.messages.append({"role": "assistant", "content": ""})
     idx = len(state.messages) - 1
     msg = state.messages[idx]
-    await send(Div(ChatMessage(idx, msg), hx_swap_oob=swap, id="chatlist"))
+    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name), hx_swap_oob=swap, id="chatlist"))
 
     # Fill in the message content
     async for chunk in r:

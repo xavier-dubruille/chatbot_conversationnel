@@ -5,8 +5,9 @@ from typing import Optional
 @dataclass
 class ScenarioConfig:
     id: int = field(default=0, metadata={"description": "the unique id of the scenario"}),
-    scenario_name: str = field(default="", metadata={"description": "ex:Chat with me"})
-    description: str = field(default="", metadata={"description": "Description of scenario"})
+    scenario_name: str = field(default="", metadata={"description": "The name, the title, used for this scenario"})
+    description: str = field(default="", metadata={
+        "description": "Description of scenario (only meant for you; it's not used anywhere)"})
     bot_name: str = field(default="", metadata={
         "description": "The name of the bot 'personage' (will only be used on the display)"})
     bot_first_msg: str = field(default="",

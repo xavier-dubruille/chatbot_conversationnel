@@ -67,7 +67,7 @@ def get(scenario_id: int, session):
                     hx_post=f'/s/{scenario_id}/update'
                 )
                 ),
-            cls="bg-white shadow-md rounded-lg p-6 max-w-5xl w-full"
+            cls="bg-white shadow-md rounded-lg p-6 max-w-7xl w-full"
         ),
         script_color_dirty,
         cls="bg-gray-100 min-h-screen flex items-center justify-center"
