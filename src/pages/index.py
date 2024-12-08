@@ -1,7 +1,11 @@
+from dataclasses import replace
+
 from fasthtml.common import *
 
 import apps
-from db_utils import get_all_scenario, create_default_system_prompt
+from config import get_all_scenario_config, get_scenario_config
+from scenario_config import ScenarioConfig
+from scenario_to_db import *
 from state import get_state
 
 app = apps.fast_app
@@ -12,31 +16,39 @@ class Scenario:
     name: str
 
 
-@app.route("/new_scenario")
-def post(scenario: Scenario):
-    id = create_default_system_prompt(scenario_name=scenario.name)
-    return Redirect(f"/s/{id}")
+@app.route("/s/{scenario_id}/copy")
+def get(scenario_id: int):
+    origin_scenario = get_scenario_config(scenario_id)
+    new_scenario = replace(origin_scenario, scenario_name=f"Copy of: {origin_scenario.scenario_name}")
+    insert_scenario(new_scenario)  # don't worry: the 'origin' id isn't inserted (so it will be auto incremented by DB)
+    return Redirect("/")
+
+
+@app.route("/s/{scenario_id}/delete")
+def get(scenario_id: int):
+    delete_scenario(ScenarioConfig(id=scenario_id))
+    return Redirect("/")
 
 
 @app.route("/")
 def get(session):
     get_state(session).scenario_id = 0
 
-    all_scenarios = get_all_scenario()
+    all_scenarios = get_all_scenario_config(True)
     # print(all_scenarios)
     page = Body(
-        Div(*[ScenarioButton(scenario) for scenario in all_scenarios],
-            Form(Group(
-                Input("New Scenario", type="text", placeholder='Chat with me', name="name"),
-                Button("Save", type="submit", cls="bg-blue-500 text-white px-4 py-2 rounded")),
-                cls="x",
-                hx_post='/new_scenario'
-            ),
+        Div(*[ScenarioButton(scenario) for scenario in all_scenarios.values()],
             cls="flex flex-col items-center justify-center h-screen bg-gray-100")
     )
     return Title("Scenario"), page
 
 
-def ScenarioButton(scenario):
+def ScenarioButton(scenario: ScenarioConfig):
     return Div(
-        A(f"{scenario[1]}(id={scenario[0]})", href=f'/s/{scenario[0]}', cls="btn btn-primary text-2xl font-bold mb-4"))
+        A(f"{scenario.scenario_name}",
+          href=f'/s/{scenario.id}',
+          style="width: 700px",
+          cls="btn btn-primary text-2xl font-bold mb-4"),
+        Button('Copy me', hx_get=f"/s/{scenario.id}/copy", style={"padding": "15px", "margin-left": "15px"}),
+        Button('Delete me', hx_get=f"/s/{scenario.id}/delete", style={"padding": "15px", "margin-left": "15px"})
+    )

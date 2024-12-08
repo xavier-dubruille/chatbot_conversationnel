@@ -17,13 +17,13 @@ api_key = os.getenv("OPENAI_API_KEY")
 if os.getenv("USE_AZURE", "no").lower() == "yes":
     client = AsyncAzureOpenAI(
         api_key=api_key,
-        api_version = os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
+        api_version=os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
     )
 
     openAiCli = AzureOpenAI(
         api_key=api_key,
-        api_version = os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
+        api_version=os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
     )
 else:

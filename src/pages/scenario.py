@@ -1,8 +1,9 @@
 from fasthtml.common import *
 
 import apps
-from db_utils import get_create_scenario
-from openia_stuff import cli
+from config import *
+from open_ai_stuff import cli
+# from open-ai_stuff import ++++++
 from state import get_state
 from tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
@@ -38,15 +39,15 @@ def ChatInput():
 
 
 # The main screen
-@app.route("/s/{scenario}")
-def get(scenario: int, session):
+@app.route("/s/{scenario_id}")
+def get(scenario_id: int, session):
     state = get_state(session)
-    state.scenario_id = scenario
+    state.scenario_id = scenario_id
 
-    state.messages = [{"role": "assistant", "content": "Hello"}]
+    scenario_config: ScenarioConfig = get_scenario_config(scenario_id, True)
+
+    state.messages = [{"role": "assistant", "content": scenario_config.bot_first_msg}]
     state.tutor_feedbacks = []
-
-    senario_name = get_create_scenario(scenario)
 
     chat_elements = [
         Div(*[ChatMessage(msg_idx, msg) for msg_idx, msg in enumerate(state.messages)],
@@ -57,8 +58,8 @@ def get(scenario: int, session):
 
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
-    page = Body(Grid(H1(A(senario_name, href=f'/'), cls="text-2xl font-bold mb-4", id="titre"),
-                     Div(A('Configure Me', href=f'/s/{scenario}/admin',
+    page = Body(Grid(H1(A(scenario_config.scenario_name, href='/'), cls="text-2xl font-bold mb-4", id="titre"),
+                     Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
                            cls="text-blue-500 hover:text-blue-700 underline"),
                          style='text-align: right'),
                      cls="m-3"),
@@ -99,7 +100,7 @@ def get(scenario: int, session):
 
                     cls="flex flex-row w-full p-3")
                 )
-    return Title(senario_name), page
+    return Title(scenario_config.scenario_name), page
 
 
 @app.ws('/wscon')
@@ -128,7 +129,7 @@ async def ws(msg: str, send, scope):
 
     # Fill in the message content
     async for chunk in r:
-        if chunk.choices and (delta:=chunk.choices[0].delta.content):   # Azure OpenAI can return empty chunks
+        if chunk.choices and (delta := chunk.choices[0].delta.content):  # Azure OpenAI can return empty chunks
             state.messages[-1]["content"] += delta
             await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
 

@@ -2,7 +2,7 @@ import markdown
 from fasthtml.common import *
 
 import apps
-from db_utils import get_system_prompt
+from config import get_scenario_config
 from state import State
 
 app = apps.fast_app
@@ -31,14 +31,12 @@ def render_feedback(last_user_message, feedback, id_to_swap, swap_method='before
 
 
 async def ask_tutor(state: State):
-    sp = get_system_prompt(state.scenario_id, "tutor", f"Je vais te donner le prompt d'un étudiant et "
-                                                       "tu vas me donner un regard critique sur le style , "
-                                                       "la grammaire et le vocabulaire utilisé: ")
+    scenario_config = get_scenario_config(state.scenario_id)
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": sp},
+            {"role": "system", "content": scenario_config.feedback_1_prompt},
             {
                 "role": "user",
                 "content": state.last_user_prompt
@@ -50,15 +48,12 @@ async def ask_tutor(state: State):
 
 
 async def ask_history_tutor(state: State):
+    scenario_config = get_scenario_config(state.scenario_id)
     state.tutor_feedbacks.append({"role": "user", "content": state.last_user_prompt})
-
-    sp = get_system_prompt(state.scenario_id, "tutor", f"Je vais te donner le prompt d'un étudiant et "
-                                                       "tu vas me donner un regard critique sur le style , "
-                                                       "la grammaire et le vocabulaire utilisé: ")
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "system", "content": sp}] + state.tutor_feedbacks,
+        messages=[{"role": "system", "content": scenario_config.feedback_2_prompt}] + state.tutor_feedbacks,
     )
 
     responce = completion.choices[0].message.content
@@ -68,14 +63,14 @@ async def ask_history_tutor(state: State):
 
 async def resume_feedback(state: State):
     contents = [d["content"] for d in state.tutor_feedbacks if "content" in d and d.get("role") == "assistant"]
-    sp = get_system_prompt(state.scenario_id, "resume",
-                           f"Je vais te donner une liste de feedback, fait moi en le résumé, merci.")
+    scenario_config = get_scenario_config(state.scenario_id)
     msg = " \n ================ \n".join(contents)
-    print("voici le resume sp: " + sp)
+    # print("voici le resume sp: " + sp)
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "system", "content": sp}, {"role": "user", "content": msg}]
+        messages=[{"role": "system", "content": scenario_config.resume_1_prompt},
+                  {"role": "user", "content": msg}]
     )
 
     response = completion.choices[0].message.content
@@ -83,15 +78,14 @@ async def resume_feedback(state: State):
 
 
 async def feedback_on_all_messages(state: State):
-    sp = get_system_prompt(state.scenario_id, "resume",
-                           f"Je vais te donner une liste de feedback, fait moi en le résumé, merci.")
+    scenario_config = get_scenario_config(state.scenario_id)
     contents = [d["content"] for d in state.messages if "content" in d and d.get("role") == "user"]
     msg = (" \n ================ \n".join(contents))
     # print(msg)
 
     completion = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "system", "content": sp}, {"role": "user", "content": msg}]
+        messages=[{"role": "system", "content": scenario_config.resume_2_prompt}, {"role": "user", "content": msg}]
     )
 
     response = completion.choices[0].message.content

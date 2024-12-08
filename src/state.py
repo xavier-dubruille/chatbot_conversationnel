@@ -1,6 +1,8 @@
 import uuid
 from dataclasses import dataclass
 
+# from config import Config
+
 _states = {}
 
 
@@ -8,6 +10,7 @@ _states = {}
 class State:
     messages: []
     tutor_feedbacks: []
+    # _config: Config = None
     scenario_id: int = 1
 
     @property
@@ -16,6 +19,15 @@ class State:
             (message["content"] for message in reversed(self.messages) if message["role"] == "user"),
             None
         )
+
+    # @property
+    # def config(self):
+    #     return self.get_config(force_update=False)
+    #
+    # def get_config(self, force_update=False):
+    #     if force_update or not self._config or self._config.scenario_id != self.scenario_id:
+    #         self._config = Config(self.scenario_id)
+    #     return self._config
 
 
 def get_state(session) -> State:
