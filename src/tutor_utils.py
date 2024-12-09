@@ -31,10 +31,12 @@ def render_feedback(last_user_message, feedback, id_to_swap, swap_method='before
 
 
 async def ask_tutor(state: State):
+    """aka feedback 1"""
     scenario_config = get_scenario_config(state.scenario_id)
 
     completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=scenario_config.feedback_1_model,
+        temperature=float(scenario_config.feedback_1_temperature),
         messages=[
             {"role": "system", "content": scenario_config.feedback_1_prompt},
             {
@@ -48,11 +50,13 @@ async def ask_tutor(state: State):
 
 
 async def ask_history_tutor(state: State):
+    """aka feedback 2"""
     scenario_config = get_scenario_config(state.scenario_id)
     state.tutor_feedbacks.append({"role": "user", "content": state.last_user_prompt})
 
     completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=scenario_config.feedback_2_model,
+        temperature=float(scenario_config.feedback_2_temperature),
         messages=[{"role": "system", "content": scenario_config.feedback_2_prompt}] + state.tutor_feedbacks,
     )
 
@@ -62,13 +66,15 @@ async def ask_history_tutor(state: State):
 
 
 async def resume_feedback(state: State):
+    """aka resume_1 """
     contents = [d["content"] for d in state.tutor_feedbacks if "content" in d and d.get("role") == "assistant"]
     scenario_config = get_scenario_config(state.scenario_id)
     msg = " \n ================ \n".join(contents)
     # print("voici le resume sp: " + sp)
 
     completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=scenario_config.resume_1_model,
+        temperature=float(scenario_config.resume_1_temperature),
         messages=[{"role": "system", "content": scenario_config.resume_1_prompt},
                   {"role": "user", "content": msg}]
     )
@@ -78,13 +84,15 @@ async def resume_feedback(state: State):
 
 
 async def feedback_on_all_messages(state: State):
+    """aka resume_2"""
     scenario_config = get_scenario_config(state.scenario_id)
     contents = [d["content"] for d in state.messages if "content" in d and d.get("role") == "user"]
     msg = (" \n ================ \n".join(contents))
     # print(msg)
 
     completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=scenario_config.resume_2_model,
+        temperature=float(scenario_config.resume_2_temperature),
         messages=[{"role": "system", "content": scenario_config.resume_2_prompt}, {"role": "user", "content": msg}]
     )
 
