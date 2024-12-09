@@ -13,6 +13,7 @@ app = apps.fast_app
 def get():
     create_scenario_table()
     insert_scenario(create_exemple_scenario_config())
+    return Redirect("/")
 
 
 @app.post("/s/{scenario_id}/update")

@@ -37,18 +37,24 @@ def get(session):
     all_scenarios = get_all_scenario_config(True)
     # print(all_scenarios)
     page = Body(
-        Div(*[ScenarioButton(scenario) for scenario in all_scenarios.values()],
+        Div(*[ScenarioButton(scenario, len(all_scenarios) == 1) for scenario in all_scenarios.values()],
             cls="flex flex-col items-center justify-center h-screen bg-gray-100")
     )
     return Title("Scenario"), page
 
 
-def ScenarioButton(scenario: ScenarioConfig):
+def ScenarioButton(scenario: ScenarioConfig, no_delete_button=False):
     return Div(
         A(f"{scenario.scenario_name}",
           href=f'/s/{scenario.id}',
           style="width: 700px",
           cls="btn btn-primary text-2xl font-bold mb-4"),
-        Button('Copy me', hx_get=f"/s/{scenario.id}/copy", style={"padding": "15px", "margin-left": "15px"}),
-        Button('Delete me', hx_get=f"/s/{scenario.id}/delete", style={"padding": "15px", "margin-left": "15px"})
+        I(hx_get=f"/s/{scenario.id}/copy",
+          title="Copy this Scenario",
+          cls="fa-solid fa-copy",
+          style={"font-size": "2rem", "padding": "15px", "margin-left": "15px"}),
+        Div() if no_delete_button else
+        I(cls='fa-solid fa-trash', alt="Delete me", hx_get=f"/s/{scenario.id}/delete",
+          title="Delete this Scenario",
+          style={"font-size": "2rem", "padding": "15px", "margin-left": "15px"}),
     )
