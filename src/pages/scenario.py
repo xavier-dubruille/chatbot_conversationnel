@@ -1,5 +1,6 @@
 from fasthtml.common import *
 
+import time
 import apps
 from config import *
 from open_ai_stuff import cli
@@ -7,6 +8,7 @@ from open_ai_stuff import cli
 from state import get_state
 from tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
+current_timestamp = int(time.time())
 app = apps.fast_app
 client = apps.client
 openAiCli = apps.openAiCli
@@ -19,12 +21,12 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
-def ChatMessage(msg_idx, msg, bot_name: str, **kwargs):
+def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
     bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
     who = bot_name if msg['role'] == 'assistant' else msg['role']
     return Div(Div(who, cls="chat-header"),
-               Div(msg['content'],
+               Div(msg['content'] + append_this,
                    id=f"chat-content-{msg_idx}",  # Target if updating the content
                    cls=f"chat-bubble {bubble_class}"),
                id=f"chat-message-{msg_idx}",  # Target if replacing the whole message
@@ -106,6 +108,9 @@ def get(scenario_id: int, session):
 
 @app.ws('/wscon')
 async def ws(msg: str, send, scope):
+    global current_timestamp
+    next_timestamp = int(time.time())
+
     state = get_state(scope.session)
     scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
 
@@ -115,7 +120,8 @@ async def ws(msg: str, send, scope):
     # Send the user message to the user (updates the UI right away)
     idx = len(state.messages) - 1
     msg = state.messages[idx]
-    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name), hx_swap_oob=swap, id="chatlist"))
+    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name, f"  -- ({next_timestamp - current_timestamp}s)"),
+                   hx_swap_oob=swap, id="chatlist"))
 
     # Send the clear input field command to the user
     await send(ChatInput())  # todo: it works but we lose focus
@@ -134,6 +140,8 @@ async def ws(msg: str, send, scope):
         if chunk.choices and (delta := chunk.choices[0].delta.content):  # Azure OpenAI can return empty chunks
             state.messages[-1]["content"] += delta
             await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
+
+    current_timestamp = next_timestamp
 
     last_user_message = state.last_user_prompt
     feedback = await ask_tutor(state)
