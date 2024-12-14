@@ -3,15 +3,12 @@ from fasthtml.common import *
 import time
 import apps
 from config import *
-from open_ai_stuff import cli
-# from open-ai_stuff import ++++++
+from litellm_stuff import complete
 from state import get_state
 from tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
 current_timestamp = int(time.time())
 app = apps.fast_app
-client = apps.client
-openAiCli = apps.openAiCli
 
 ID_FEEDBACK_1 = 'id_feedback_1'
 ID_FEEDBACK_2 = 'id_feedback_2'
@@ -127,7 +124,8 @@ async def ws(msg: str, send, scope):
     await send(ChatInput())  # todo: it works but we lose focus
 
     # Model response (streaming)
-    r = await cli(state.scenario_id, state.messages)
+    scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
+    r = await complete(scenario_config.role_model, scenario_config.role_prompt, state.messages, scenario_config.role_temperature, stream=True)
 
     # Send an empty message with the assistant response
     state.messages.append({"role": "assistant", "content": ""})

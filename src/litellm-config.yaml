@@ -1,0 +1,32 @@
+model-list:
+  - model_name: "gpt-4o-mini"
+    litellm_params:
+      model: "azure/gpt-4o-mini"
+      api_base: "https://ai-ephec.openai.azure.com"
+      api_key: "os.environ/AZURE_OPENAI_API_KEY"
+      api_version: "2024-08-01-preview"
+
+  - model_name: "gpt-4o"
+    litellm_params:
+      model: "azure/gpt-4o"
+      api_base: "https://ai-ephec.openai.azure.com"
+      api_key: "os.environ/AZURE_OPENAI_API_KEY"
+      api_version: "2024-08-01-preview"
+
+  - model_name : "Mistral-large-2407"
+    litellm_params:
+      model: "openai/Mistral-large-2407"
+      api_base: "https://Mistral-large-2407-tfelt.swedencentral.models.ai.azure.com/v1"
+      api_key: "os.environ/MISTRAL_API_KEY"
+  
+  - model_name : "Llama-3.1-70B-Instruct"
+    litellm_params:
+      model: openai/Meta-Llama-3.1-70B-Instruct"
+      api_base: "https://Meta-Llama-3-1-70B-Instruct-cpce.swedencentral.models.ai.azure.com/v1"
+      api_key: "os.environ/LLAMA_31_API_KEY"
+
+  - model_name: "Llama-3.2-90B-Vision-Instruct"
+    litellm_params:
+      model: "openai/Meta-Llama-3.2-90B-Vision-Instruct"
+      api_base: "https://Llama-3-2-90B-Vision-Instruct-fg.swedencentral.models.ai.azure.com/v1"
+      api_key: "os.environ/LLAMA_32_API_KEY"

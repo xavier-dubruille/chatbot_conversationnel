@@ -4,10 +4,9 @@ from fasthtml.common import *
 import apps
 from config import get_scenario_config
 from state import State
+from litellm_stuff import complete
 
 app = apps.fast_app
-client = apps.client
-openAiCli = apps.openAiCli
 
 ID_FEEDBACK_1 = 'id_feedback_1'
 ID_FEEDBACK_2 = 'id_feedback_2'
@@ -34,16 +33,11 @@ async def ask_tutor(state: State):
     """aka feedback 1"""
     scenario_config = get_scenario_config(state.scenario_id)
 
-    completion = await client.chat.completions.create(
+    completion = await complete(
         model=scenario_config.feedback_1_model,
-        temperature=float(scenario_config.feedback_1_temperature),
-        messages=[
-            {"role": "system", "content": scenario_config.feedback_1_prompt},
-            {
-                "role": "user",
-                "content": state.last_user_prompt
-            }
-        ]
+        system_prompt=scenario_config.feedback_1_prompt,
+        messages=[{"role": "user", "content": state.last_user_prompt}],
+        temperature=scenario_config.feedback_1_temperature,
     )
 
     return completion.choices[0].message.content
@@ -54,15 +48,16 @@ async def ask_history_tutor(state: State):
     scenario_config = get_scenario_config(state.scenario_id)
     state.tutor_feedbacks.append({"role": "user", "content": state.last_user_prompt})
 
-    completion = await client.chat.completions.create(
+    completion = await complete(
         model=scenario_config.feedback_2_model,
-        temperature=float(scenario_config.feedback_2_temperature),
-        messages=[{"role": "system", "content": scenario_config.feedback_2_prompt}] + state.tutor_feedbacks,
+        system_prompt=scenario_config.feedback_2_prompt,
+        messages=state.tutor_feedbacks,
+        temperature=scenario_config.feedback_2_temperature,
     )
 
-    responce = completion.choices[0].message.content
-    state.tutor_feedbacks.append({"role": "assistant", "content": responce})
-    return responce
+    response = completion.choices[0].message.content
+    state.tutor_feedbacks.append({"role": "assistant", "content": response})
+    return response
 
 
 async def resume_feedback(state: State):
@@ -72,11 +67,11 @@ async def resume_feedback(state: State):
     msg = " \n ================ \n".join(contents)
     # print("voici le resume sp: " + sp)
 
-    completion = await client.chat.completions.create(
+    completion = await complete(
         model=scenario_config.resume_1_model,
-        temperature=float(scenario_config.resume_1_temperature),
-        messages=[{"role": "system", "content": scenario_config.resume_1_prompt},
-                  {"role": "user", "content": msg}]
+        system_prompt=scenario_config.resume_1_prompt,
+        messages=[{"role": "user", "content": msg}],
+        temperature=scenario_config.resume_1_temperature,
     )
 
     response = completion.choices[0].message.content
@@ -90,10 +85,11 @@ async def feedback_on_all_messages(state: State):
     msg = (" \n ================ \n".join(contents))
     # print(msg)
 
-    completion = await client.chat.completions.create(
+    completion = await complete(
         model=scenario_config.resume_2_model,
-        temperature=float(scenario_config.resume_2_temperature),
-        messages=[{"role": "system", "content": scenario_config.resume_2_prompt}, {"role": "user", "content": msg}]
+        system_prompt=scenario_config.resume_2_prompt,
+        messages=[{"role": "user", "content": msg}],
+        temperature=scenario_config.resume_2_temperature,
     )
 
     response = completion.choices[0].message.content
