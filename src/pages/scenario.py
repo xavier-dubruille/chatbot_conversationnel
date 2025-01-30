@@ -57,8 +57,8 @@ def get(scenario_id: int, session):
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
         Form(
             Group(
-                ChatInput(),
-                Button("Send", cls="btn btn-primary"),
+                Div(ChatInput(), id='msg-input-wrapper'),
+                Button("Send", id="send_input", cls="btn btn-primary"),
                 cls="flex space-x-2 m-2"
             ),
             ws_send=True, hx_ext="ws", ws_connect="/wscon",
