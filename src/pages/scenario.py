@@ -36,7 +36,7 @@ def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
 # The input field for the user message. Also used to clear the
 # input field after sending a message via an OOB swap
 def ChatInput():
-    return Input(type="text", name='msg', id='msg-input',
+    return Input(type="text", name='msg', id='msg-input', autofocus=True,
                  placeholder="Type a message",
                  cls="input input-bordered w-full", hx_swap_oob='true')
 
@@ -55,9 +55,14 @@ def get(scenario_id: int, session):
     chat_elements = [
         Div(*[ChatMessage(msg_idx, msg, scenario_config.bot_name) for msg_idx, msg in enumerate(state.messages)],
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
-        Form(Group(ChatInput(), Button("Send", cls="btn btn-primary")),
-             ws_send=True, hx_ext="ws", ws_connect="/wscon",
-             cls="flex space-x-2 m-2")]
+        Form(
+            Group(
+                ChatInput(),
+                Button("Send", cls="btn btn-primary"),
+                cls="flex space-x-2 m-2"
+            ),
+            ws_send=True, hx_ext="ws", ws_connect="/wscon",
+            cls="flex space-x-2 m-2")]
 
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
@@ -70,36 +75,36 @@ def get(scenario_id: int, session):
                         cls="card bg-base-300 rounded-box basis-[75%] "),
                     Div(cls="divider divider-horizontal"),
 
-                    Div(Div(H1("Feedback with History", style=sub_title_style),
+                    Div(Div(H1("Tutor", style=sub_title_style),
                             Div("", id="tutor_history_content"),
                             cls='card bg-base-300 rounded-box ',
                             style="width:100%; height:100%"
                             ),
-                        Div(cls="divider divider-vertical"),
-                        Div(H1("Summary all messages", style=sub_title_style),
-                            Div("", id=ID_FEEDBACK_3),
-                            cls='card bg-base-300 rounded-box',
-                            style="width:100%; height:100%"
-                            ),
+                        # Div(cls="divider divider-vertical"),
+                        # Div(H1("Summary all messages", style=sub_title_style),
+                        #     Div("", id=ID_FEEDBACK_3),
+                        #     cls='card bg-base-300 rounded-box',
+                        #     style="width:100%; height:100%"
+                        #     ),
                         cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
                         style='display: flex; flex-direction: column; justify-content: center'
                         ),
 
-                    Div(cls="divider divider-horizontal"),
-                    Div(Div(H1("Feedback No History", style=sub_title_style),
-                            Div("", id="tutor_content"),
-                            cls='card bg-base-300 rounded-box ',
-                            style="width:100%; height:100%"
-                            ),
-                        Div(cls="divider divider-vertical"),
-                        Div(H1("Summary all feedbacks", style=sub_title_style),
-                            Div("", id=ID_FEEDBACK_4),
-                            cls='card bg-base-300 rounded-box',
-                            style="width:100%; height:100%"
-                            ),
-                        cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
-                        style='display: flex; flex-direction: column; justify-content: center'
-                        ),
+                    # Div(cls="divider divider-horizontal"),
+                    # Div(Div(H1("Feedback No History", style=sub_title_style),
+                    #         Div("", id="tutor_content"),
+                    #         cls='card bg-base-300 rounded-box ',
+                    #         style="width:100%; height:100%"
+                    #         ),
+                    #     Div(cls="divider divider-vertical"),
+                    #     Div(H1("Summary all feedbacks", style=sub_title_style),
+                    #         Div("", id=ID_FEEDBACK_4),
+                    #         cls='card bg-base-300 rounded-box',
+                    #         style="width:100%; height:100%"
+                    #         ),
+                    #     cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
+                    #     style='display: flex; flex-direction: column; justify-content: center'
+                    #     ),
 
                     cls="flex flex-row w-full p-3")
                 )
@@ -120,7 +125,9 @@ async def ws(msg: str, send, scope):
     # Send the user message to the user (updates the UI right away)
     idx = len(state.messages) - 1
     msg = state.messages[idx]
-    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name, f"  -- ({next_timestamp - current_timestamp}s)"),
+    # await send(Div(ChatMessage(idx, msg, scenario_config.bot_name, f"  -- ({next_timestamp - current_timestamp}s)"),
+    #                hx_swap_oob=swap, id="chatlist"))
+    await send(Div(ChatMessage(idx, msg, scenario_config.bot_name),
                    hx_swap_oob=swap, id="chatlist"))
 
     # Send the clear input field command to the user
@@ -144,18 +151,18 @@ async def ws(msg: str, send, scope):
     current_timestamp = next_timestamp
 
     last_user_message = state.last_user_prompt
-    feedback = await ask_tutor(state)
-    feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
-    await send(feedback_rendered)
+    # feedback = await ask_tutor(state)
+    # feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
+    # await send(feedback_rendered)
 
     feedback = await ask_history_tutor(state)
     feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
     await send(feedback_rendered)
 
-    feedback = await feedback_on_all_messages(state)
-    feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
-    await send(feedback_rendered)
+    # feedback = await feedback_on_all_messages(state)
+    # feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
+    # await send(feedback_rendered)
 
-    feedback = await resume_feedback(state)
-    feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_4, 'true')
-    await send(feedback_rendered)
+    # feedback = await resume_feedback(state)
+    # feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_4, 'true')
+    # await send(feedback_rendered)

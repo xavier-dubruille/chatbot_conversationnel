@@ -42,7 +42,8 @@ class ScenarioConfig:
         "description": "",
         "category": FEEDBACK1_CAT})
     feedback_1_use_history: bool = field(default=False, metadata={
-        "description": "If 'true' then the feedbacks are one long conversation that has started by the system prompt then followed by the users prompt with only the assistant prompt displayed",
+        "description": "If 'true' then the feedbacks are one long conversation that has started by the system prompt"
+                       " then followed by the users prompt with only the assistant prompt displayed",
         "category": FEEDBACK1_CAT})
     feedback_1_model: str = field(default="", metadata={
         "description": "gpt4o, gpt4o-mini, ...",
