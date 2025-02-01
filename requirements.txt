@@ -3,3 +3,6 @@ uvicorn>=0.29
 python-dotenv~=1.0.1
 openai~=1.54.4
 Markdown~=3.7
+psycopg_pool
+psycopg_binary
+psycopg

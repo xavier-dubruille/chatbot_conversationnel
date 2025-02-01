@@ -1,11 +1,15 @@
-def user_type(login):
+def get_user(request):
+    user = request.headers.get("X-Remote-User", "Anonyme")
+    user_type = _user_type(user)
+    is_student = user_type != 'other'
+
+    return user, user_type, is_student
+
+
+def _user_type(login):
     if login.startswith("TI"):
         return 'ti'
     elif login.startswith("eB"):
         return 'eb'
     else:
         return 'other'
-
-
-def is_student(login):
-    return user_type(login) != 'other'
