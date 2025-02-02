@@ -40,17 +40,17 @@ def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
                     INSERT INTO keystrokes (user_name, key, code, timestamp)
                     VALUES (%s, %s, %s, %s)
                     """
-                    print("(debug) query: " + query)
+                    # print("(debug) query: " + query)
                     cur.execute(query, (user, keystroke.key, keystroke.code, keystroke.timestamp))
                 conn.commit()
         except Exception as e:
             conn.rollback()
-            # faudrait que une autre exception !
+            # faudrait une autre exception !
             raise HTTPException(status_code=500, detail=str(e))
 
 
-async def create_keystroke_table():
-    async with get_db() as conn:
+def create_keystroke_table():
+    with get_db() as conn:
         try:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS keystrokes (
@@ -64,5 +64,5 @@ async def create_keystroke_table():
 
         except Exception as e:
             conn.rollback()
-            # idéalement, faudrait que je j'envoie une autre exception après le rollback
+            # faudrait une autre exception !
             raise HTTPException(status_code=500, detail=str(e))
