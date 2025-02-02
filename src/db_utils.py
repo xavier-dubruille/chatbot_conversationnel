@@ -32,6 +32,12 @@ def get_db():
 
 
 def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
+
+    if os.getenv("SKIP_DB_INSERT", False):
+        print(f"{keystrokes}")
+        print("Don't insert those keystrokes in database ...")
+        return
+
     with get_db() as conn:
         try:
             with conn.cursor() as cur:
@@ -41,28 +47,81 @@ def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
                     VALUES (%s, %s, %s, %s)
                     """
                     # print("(debug) query: " + query)
+
+                    # todo: make batch insert ! (executemany)
                     cur.execute(query, (user, keystroke.key, keystroke.code, keystroke.timestamp))
                 conn.commit()
         except Exception as e:
             conn.rollback()
             # faudrait une autre exception !
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(e)
 
 
 def create_keystroke_table():
     with get_db() as conn:
         try:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS keystrokes (
-                user_name TEXT NOT NULL,
-                key TEXT NOT NULL,
-                code TEXT NOT NULL,
-                timestamp DOUBLE PRECISION NOT NULL
-            );
-            """)
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS keystrokes (
+                    user_name TEXT NOT NULL,
+                    key TEXT NOT NULL,
+                    code TEXT NOT NULL,
+                    timestamp DOUBLE PRECISION NOT NULL
+                );
+                """)
             conn.commit()
 
         except Exception as e:
             conn.rollback()
             # faudrait une autre exception !
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(e)
+
+
+def create_chat_message_table():
+    with get_db() as conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS chat_message (
+                        id SERIAL PRIMARY KEY,
+                        user_name TEXT NOT NULL,
+                        assistant_msg TEXT,
+                        user_msg TEXT,
+                        start_assistant_timestamp DOUBLE PRECISION,
+                        finished_assistant_timestamp DOUBLE PRECISION,
+                        finished_user_timestamp DOUBLE PRECISION
+                    );
+                """)
+
+            conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            # faudrait une autre exception !
+            raise HTTPException(e)
+
+
+def save_chat_message_to_db(user_name: str, assistant_msg, user_msg,
+                            assisstant_finished_ts,
+                            user_finished_ts):
+    if os.getenv("SKIP_DB_INSERT", False):
+        print(f'(DEBUG)  user:{user_name},  assitant_msg:{assistant_msg}, user_msg : {user_msg}, '
+              f'assisstant_end_ts:{assisstant_finished_ts},'
+              f'user_finished_ts:{user_finished_ts}')
+        print("Don't insert those messages in database ...")
+        return
+    with get_db() as conn:
+        try:
+            with conn.cursor() as cur:
+                query = """
+                INSERT INTO chat_message (user_name, assistant_msg, user_msg, start_assistant_timestamp, finished_assistant_timestamp, finished_user_timestamp) 
+                VALUES (%s, %s, %s,%s, %s, %s)
+                """
+                # print("(debug) query: " + query)
+                cur.execute(query, (
+                user_name, assistant_msg, user_msg, assisstant_finished_ts, assisstant_finished_ts, user_finished_ts))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            # faudrait une autre exception !
+            raise HTTPException(e)

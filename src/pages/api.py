@@ -5,7 +5,7 @@ from starlette.responses import Response
 
 import apps
 from connected_user import ConnectedUser
-from db_utils import insert_keystroke_in_db, create_keystroke_table
+from db_utils import create_keystroke_table, create_chat_message_table, insert_keystroke_in_db
 from utils import KeyStoke
 
 app = apps.fast_app
@@ -38,18 +38,18 @@ async def post(body, request):
     keystrokes = _parse_json_to_keyStokes(body)
 
     insert_keystroke_in_db(user.user_name, keystrokes)
-
-    print("keystrokes: ", keystrokes)
+    # print("keystrokes: ", keystrokes)
 
     return "{status:ok}"
 
 
-@app.route("/admin/create_keystroke_table")
+@app.route("/admin/init_postgres")
 def get(request):
     user = ConnectedUser(request)
     if user.is_student:
         return "{status:unauthorized}"
 
     create_keystroke_table()
+    create_chat_message_table()
 
     return "{status:ok}"

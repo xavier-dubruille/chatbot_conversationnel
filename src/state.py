@@ -12,11 +12,19 @@ class State:
     tutor_feedbacks: []
     # _config: Config = None
     scenario_id: int = 1
+    assistant_finished_timestamp = 0.0
 
     @property
     def last_user_prompt(self):
         return next(
             (message["content"] for message in reversed(self.messages) if message["role"] == "user"),
+            None
+        )
+
+    @property
+    def last_assistant_prompt(self):
+        return next(
+            (message["content"] for message in reversed(self.messages) if message["role"] == "assistant"),
             None
         )
 

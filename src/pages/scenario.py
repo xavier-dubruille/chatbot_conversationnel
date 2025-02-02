@@ -4,6 +4,7 @@ import time
 import apps
 from config import *
 from connected_user import ConnectedUser
+from db_utils import save_chat_message_to_db
 from open_ai_stuff import cli
 # from open-ai_stuff import ++++++
 from state import get_state
@@ -25,7 +26,7 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
     bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
-    who = bot_name if msg['role'] == 'assistant' else msg['role']
+    who = bot_name if msg['role'] == 'assistant' else 'You'
     return Div(Div(who, cls="chat-header"),
                Div(msg['content'] + append_this,
                    id=f"chat-content-{msg_idx}",  # Target if updating the content
@@ -52,6 +53,8 @@ def get(scenario_id: int, session, request):
     scenario_config: ScenarioConfig = get_scenario_config(scenario_id, True)
 
     state.messages = [{"role": "assistant", "content": scenario_config.bot_first_msg}]
+    state.assistant_finished_timestamp = time.time()
+
     state.tutor_feedbacks = []
 
     chat_elements = [
@@ -115,11 +118,14 @@ def get(scenario_id: int, session, request):
 
 @app.ws('/wscon')
 async def ws(msg: str, send, scope):
-    global current_timestamp
-    next_timestamp = int(time.time())
-
     state = get_state(scope.session)
     scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
+
+    save_chat_message_to_db("user_name",
+                            state.last_assistant_prompt,
+                            msg.rstrip(),
+                            state.assistant_finished_timestamp,
+                            time.time())
 
     state.messages.append({"role": "user", "content": msg.rstrip()})
     swap = 'beforeend'
@@ -129,11 +135,13 @@ async def ws(msg: str, send, scope):
     msg = state.messages[idx]
     # await send(Div(ChatMessage(idx, msg, scenario_config.bot_name, f"  -- ({next_timestamp - current_timestamp}s)"),
     #                hx_swap_oob=swap, id="chatlist"))
+
+    # todo: we need to autoscroll or something
     await send(Div(ChatMessage(idx, msg, scenario_config.bot_name),
                    hx_swap_oob=swap, id="chatlist"))
 
     # Send the clear input field command to the user
-    await send(ChatInput())  # todo: it works but we lose focus
+    await send(ChatInput())
 
     # Model response (streaming)
     r = await cli(state.scenario_id, state.messages)
@@ -150,7 +158,7 @@ async def ws(msg: str, send, scope):
             state.messages[-1]["content"] += delta
             await send(Span(delta, id=f"chat-content-{len(state.messages) - 1}", hx_swap_oob=swap))
 
-    current_timestamp = next_timestamp
+    state.assistant_finished_timestamp = time.time()
 
     last_user_message = state.last_user_prompt
     # feedback = await ask_tutor(state)
