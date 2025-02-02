@@ -4,8 +4,9 @@ from typing import List
 from starlette.responses import Response
 
 import apps
+from connected_user import ConnectedUser
 from db_utils import insert_keystroke_in_db, create_keystroke_table
-from utils import get_user, KeyStoke
+from utils import KeyStoke
 
 app = apps.fast_app
 
@@ -17,8 +18,8 @@ def get():
 
 @app.route("/api/user")
 def get(request):
-    user, user_type, is_student = get_user(request)
-    return f" Utilisateur connecté : {user} <br> Student Type : {user_type} <br> Is Student : {is_student}"
+    user = ConnectedUser(request)
+    return f" Utilisateur connecté : {user.user_name} <br> Student Type : {user.user_type} <br> Is Student : {user.is_student}"
 
 
 @app.route("/api/logout")
@@ -33,10 +34,10 @@ def _parse_json_to_keyStokes(json_str) -> List[KeyStoke]:
 
 @app.route("/api/keystrokes")
 async def post(body, request):
-    user, _, _ = get_user(request)
+    user = ConnectedUser(request)
     keystrokes = _parse_json_to_keyStokes(body)
 
-    insert_keystroke_in_db(user, keystrokes)
+    insert_keystroke_in_db(user.user_name, keystrokes)
 
     print("keystrokes: ", keystrokes)
 
@@ -45,8 +46,8 @@ async def post(body, request):
 
 @app.route("/admin/create_keystroke_table")
 def get(request):
-    _, _, is_student = get_user(request)
-    if is_student:
+    user = ConnectedUser(request)
+    if user.is_student:
         return "{status:unauthorized}"
 
     create_keystroke_table()
