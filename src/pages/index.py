@@ -38,6 +38,9 @@ def get(session, request):
     all_scenarios = get_all_scenario_config(True)
     # print(all_scenarios)
     page = Body(
+        Div(A(f'{user.user_name} - logout', href=f'/api/logout',
+              cls="text-blue-500 hover:text-blue-700 underline"),
+            style='text-align: right'),
         Div(*[ScenarioButton(scenario, user, len(all_scenarios) == 1) for scenario in all_scenarios.values() if
               user.can_see_scenario(scenario.scenario_name)],
             cls="flex flex-col items-center justify-center h-screen bg-gray-100")

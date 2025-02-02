@@ -3,6 +3,7 @@ from fasthtml.common import *
 import time
 import apps
 from config import *
+from connected_user import ConnectedUser
 from open_ai_stuff import cli
 # from open-ai_stuff import ++++++
 from state import get_state
@@ -43,9 +44,10 @@ def ChatInput():
 
 # The main screen
 @app.route("/s/{scenario_id}")
-def get(scenario_id: int, session):
+def get(scenario_id: int, session, request):
     state = get_state(session)
     state.scenario_id = scenario_id
+    user = ConnectedUser(request)
 
     scenario_config: ScenarioConfig = get_scenario_config(scenario_id, True)
 
@@ -67,9 +69,9 @@ def get(scenario_id: int, session):
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
     page = Body(Grid(H1(A(scenario_config.scenario_name, href='/'), cls="text-2xl font-bold mb-4", id="titre"),
-                     Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
-                           cls="text-blue-500 hover:text-blue-700 underline"),
-                         style='text-align: right'),
+                     Div() if user.is_student else Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
+                                                         cls="text-blue-500 hover:text-blue-700 underline"),
+                                                       style='text-align: right'),
                      cls="m-3"),
                 Div(Div(*chat_elements,
                         cls="card bg-base-300 rounded-box basis-[75%] "),
