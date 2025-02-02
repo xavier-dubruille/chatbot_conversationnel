@@ -1,3 +1,13 @@
+from dataclasses import dataclass
+
+
+@dataclass
+class KeyStoke:
+    key: str
+    code: str
+    timestamp: float
+
+
 def get_user(request):
     user = request.headers.get("X-Remote-User", "Anonyme")
     user_type = _user_type(user)
