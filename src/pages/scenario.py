@@ -75,7 +75,7 @@ def get(scenario_id: int, session):
                         cls="card bg-base-300 rounded-box basis-[75%] "),
                     Div(cls="divider divider-horizontal"),
 
-                    Div(Div(H1("Tutor", style=sub_title_style),
+                    Div(Div(H1("Tutor (deactivated)", style=sub_title_style),
                             Div("", id="tutor_history_content"),
                             cls='card bg-base-300 rounded-box ',
                             style="width:100%; height:100%"
@@ -155,9 +155,10 @@ async def ws(msg: str, send, scope):
     # feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
     # await send(feedback_rendered)
 
-    feedback = await ask_history_tutor(state)
-    feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
-    await send(feedback_rendered)
+    # tmp disable it ...
+    # feedback = await ask_history_tutor(state)
+    # feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
+    # await send(feedback_rendered)
 
     # feedback = await feedback_on_all_messages(state)
     # feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
