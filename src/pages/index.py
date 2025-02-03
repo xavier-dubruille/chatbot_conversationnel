@@ -5,6 +5,7 @@ from fasthtml.common import *
 import apps
 from config import get_all_scenario_config, get_scenario_config
 from connected_user import ConnectedUser
+from consent_message import consent_msg
 from scenario_to_db import *
 from state import get_state
 
@@ -38,6 +39,7 @@ def get(session, request):
     all_scenarios = get_all_scenario_config(True)
     # print(all_scenarios)
     page = Body(
+        Script(f"alert(\"{consent_msg}\");"),
         Div(A(f'{user.user_name} - logout', href=f'/api/logout',
               cls="text-blue-500 hover:text-blue-700 underline"),
             style='text-align: right'),
