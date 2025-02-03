@@ -32,7 +32,6 @@ def get_db():
 
 
 def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
-
     if os.getenv("SKIP_DB_INSERT", False):
         print(f"{keystrokes}")
         print("Don't insert those keystrokes in database ...")
@@ -102,11 +101,12 @@ def create_chat_message_table():
 
 
 def save_chat_message_to_db(user_name: str, assistant_msg, user_msg,
-                            assisstant_finished_ts,
+                            assistant_started_timestamp,
+                            assistant_finished_ts,
                             user_finished_ts):
     if os.getenv("SKIP_DB_INSERT", False):
         print(f'(DEBUG)  user:{user_name},  assitant_msg:{assistant_msg}, user_msg : {user_msg}, '
-              f'assisstant_end_ts:{assisstant_finished_ts},'
+              f'assisstant_end_ts:{assistant_finished_ts},'
               f'user_finished_ts:{user_finished_ts}')
         print("Don't insert those messages in database ...")
         return
@@ -119,7 +119,8 @@ def save_chat_message_to_db(user_name: str, assistant_msg, user_msg,
                 """
                 # print("(debug) query: " + query)
                 cur.execute(query, (
-                user_name, assistant_msg, user_msg, assisstant_finished_ts, assisstant_finished_ts, user_finished_ts))
+                    user_name, assistant_msg, user_msg, assistant_started_timestamp, assistant_finished_ts,
+                    user_finished_ts))
             conn.commit()
         except Exception as e:
             conn.rollback()

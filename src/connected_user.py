@@ -1,11 +1,21 @@
+from fastcore.foundation import L
+
+
 class ConnectedUser:
     def __init__(self, request_or_scope):
         headers = request_or_scope.headers
 
-        # if it was a 'request'
-        self.user_name = headers.get("X-Remote-User", "Anonymous")
+        default = "Anonymous"
+        if hasattr(headers, "get"):
+            self.user_name = headers.get("X-Remote-User", default)
+        elif isinstance(headers, (list, tuple, L)):
+            self.user_name = next(
+                (value.decode() for key, value in headers if key.decode().lower() == "x-remote-user"), default)
+        else:
+            self.user_name = default
 
-        # todo: else
+        if self.user_name == default:
+            print("Connected user not identified !")
 
     @property
     def user_type(self):

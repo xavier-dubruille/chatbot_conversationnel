@@ -120,13 +120,13 @@ def get(scenario_id: int, session, request):
 async def ws(msg: str, send, scope):
     state = get_state(scope.session)
     scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
-
-    save_chat_message_to_db("user_name",
+    user = ConnectedUser(scope)
+    save_chat_message_to_db(user.user_name,
                             state.last_assistant_prompt,
                             msg.rstrip(),
+                            state.assistant_started_timestamp,
                             state.assistant_finished_timestamp,
                             time.time())
-
     state.messages.append({"role": "user", "content": msg.rstrip()})
     swap = 'beforeend'
 
@@ -153,6 +153,7 @@ async def ws(msg: str, send, scope):
     await send(Div(ChatMessage(idx, msg, scenario_config.bot_name), hx_swap_oob=swap, id="chatlist"))
 
     # Fill in the message content
+    state.assistant_started_timestamp = time.time()  # probably useless ? (because too close from already saved ts ?)
     async for chunk in r:
         if chunk.choices and (delta := chunk.choices[0].delta.content):  # Azure OpenAI can return empty chunks
             state.messages[-1]["content"] += delta

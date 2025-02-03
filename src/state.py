@@ -13,6 +13,7 @@ class State:
     # _config: Config = None
     scenario_id: int = 1
     assistant_finished_timestamp = 0.0
+    assistant_started_timestamp = 0.0
 
     @property
     def last_user_prompt(self):
