@@ -24,7 +24,7 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
 def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
-    bubble_class = "cerulean_blue chat-bubble-primary cerulean_blue" if msg['role'] == 'user' else 'oxford_blue chat-bubble-secondary oxford_blue'
+    bubble_class = "chat-bubble-primary cerulean_blue" if msg['role'] == 'user' else 'chat-bubble-secondary oxford_blue'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
     who = bot_name if msg['role'] == 'assistant' else 'You'
     return Div(Div(who, cls="chat-header"),
@@ -40,7 +40,9 @@ def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
 def ChatInput():
     return Input(type="text", name='msg', id='msg-input', autofocus=True,
                  placeholder="Type a message",
-                 cls="input input-bordered w-full", hx_swap_oob='true')
+                 cls="input input-bordered w-full",
+                 style="width: 100%",
+                 hx_swap_oob='true')
 
 
 # The main screen
@@ -62,12 +64,15 @@ def get(scenario_id: int, session, request):
             id="chatlist", cls="chat-box h-[73vh] overflow-y-auto"),
         Form(
             Group(
-                Div(ChatInput(), id='msg-input-wrapper'),
-                Button("Send", id="send_input", cls="btn btn-primary"),
-                cls="flex space-x-2 m-2"
+                Div(ChatInput(), id='msg-input-wrapper', style="width: 100%"),
+                Button("Send", id="send_input", cls="btn btn-primary cerulean_blue"),
+                cls="flex space-x-2 m-2",
+                style="min-width: 80%; justify-content: flex-end",
             ),
             ws_send=True, hx_ext="ws", ws_connect="/wscon",
-            cls="flex space-x-2 m-2")]
+            cls="flex space-x-2 m-2",
+            style="justify-content: flex-end"
+        )]
 
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
