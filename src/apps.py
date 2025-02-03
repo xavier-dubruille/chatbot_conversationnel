@@ -10,11 +10,11 @@ tlink = Script(src="https://cdn.tailwindcss.com"),
 font_awsome = Script(src="https://kit.fontawesome.com/f735776107.js", crossorigin="anonymous")
 keystrokes = Script(src="/static/keystrokes.js")
 dlink = Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css")
-css = Style('.x {border:black solid 1px}  .down {position:absolute; bottom:10px; right:10px} ')
+css = Style(
+    '.x {border:black solid 1px}  .down {position:absolute; bottom:10px; right:10px} .cerulean_blue {background-color:#2b6cb0} .oxford_blue {background-color:#2d3748}')
 
 fast_app = FastHTML(hdrs=(font_awsome, keystrokes, tlink, dlink, css), exts='ws')
 fast_app.static_route(prefix='/static', static_path='./src/static')
-
 
 # openai.api_key = os.environ.get("OPENAI_API_KEY")
 api_key = os.getenv("OPENAI_API_KEY")

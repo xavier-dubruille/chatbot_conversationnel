@@ -24,7 +24,7 @@ ID_FEEDBACK_4 = 'id_feedback_4'
 # Chat message component (renders a chat bubble)
 # Now with a unique ID for the content and the message
 def ChatMessage(msg_idx, msg, bot_name: str, append_this='', **kwargs):
-    bubble_class = "chat-bubble-primary" if msg['role'] == 'user' else 'chat-bubble-secondary bg-fuchsia-600'
+    bubble_class = "cerulean_blue chat-bubble-primary cerulean_blue" if msg['role'] == 'user' else 'oxford_blue chat-bubble-secondary oxford_blue'
     chat_class = "chat-end" if msg['role'] == 'user' else 'chat-start'
     who = bot_name if msg['role'] == 'assistant' else 'You'
     return Div(Div(who, cls="chat-header"),
