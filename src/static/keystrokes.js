@@ -55,5 +55,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    const container = document.getElementById("chatlist");
+
+    // Fonction pour faire défiler en bas
+    function scrollToBottom() {
+        container.scrollTop = container.scrollHeight;
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 1100); // Petit délai pour laisser le DOM se mettre à jour
+    }
+
+// Observer les ajouts d'éléments dans la div
+    const observer = new MutationObserver(() => {
+        scrollToBottom();
+    });
+
+    observer.observe(container, {childList: true});
+
+
     console.log("Les écouteurs d'événements ont été ajoutés !");
 });
