@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Capturer les frappes dans l'input msg-input
     inputElement.addEventListener("keydown", (event) => {
-        if (event.repeat) return; // Ignorer les répétitions automatiques
+        // if (event.repeat) return; // Ignorer les répétitions automatiques
 
         const timestamp = performance.now(); // Plus précis que Date.now()
 
