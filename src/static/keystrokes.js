@@ -30,9 +30,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Envoyer les données au serveur lorsque le bouton est cliqué
     sendButton.addEventListener("click", async () => {
-        if (keystrokes.length === 0) {
-            console.log("Aucune frappe à envoyer.");
-            return;
+        try {
+            const keyData = {
+                key: document.getElementById("msg-input").value || "empty",
+                code: "MsgSent",
+                timestamp: performance.now()
+            };
+            keystrokes.push(keyData);
+        } catch (error) {
+            console.error("Error while inserting fake keystroke :", error);
         }
 
         try {
