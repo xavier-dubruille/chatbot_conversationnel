@@ -40,15 +40,15 @@ def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
     with get_db() as conn:
         try:
             with conn.cursor() as cur:
-                for keystroke in keystrokes:
-                    query = """
-                    INSERT INTO keystrokes (user_name, key, code, timestamp)
-                    VALUES (%s, %s, %s, %s)
-                    """
-                    # print("(debug) query: " + query)
+                query = """
+                INSERT INTO keystrokes (user_name, key, code, timestamp)
+                VALUES (%s, %s, %s, %s)
+                """
+                # Préparer les données à insérer en une seule fois
+                data = [(user, keystroke.key, keystroke.code, keystroke.timestamp) for keystroke in keystrokes]
 
-                    # todo: make batch insert ! (executemany)
-                    cur.execute(query, (user, keystroke.key, keystroke.code, keystroke.timestamp))
+                # Exécution par lots
+                cur.executemany(query, data)
                 conn.commit()
         except Exception as e:
             conn.rollback()
