@@ -29,7 +29,10 @@ async def logout(request):
 
 def _parse_json_to_keyStokes(json_str) -> List[KeyStoke]:
     data = json.loads(json_str)
-    return [KeyStoke(**item) for item in data]
+    return [
+        KeyStoke(key=item.get("key", "NoKey"), code=item.get("code", "NoCode"),
+                 timestamp=item.get("timestamp", 0.0)) for item in data if isinstance(item, dict)]
+    # return [KeyStoke(**item) for item in data]
 
 
 @app.route("/api/keystrokes")
