@@ -54,8 +54,12 @@ async def ask_history_tutor(state: State):
     scenario_config = get_scenario_config(state.scenario_id)
     state.tutor_feedbacks.append({"role": "user", "content": state.last_user_prompt})
 
+    model = "gpt-4o-mini" if scenario_config.feedback_2_model == "gpt4o-mini" \
+        else "gpt-4o" if scenario_config.feedback_2_model == "gpt4o" \
+        else scenario_config.feedback_2_model
+
     completion = await client.chat.completions.create(
-        model=scenario_config.feedback_2_model,
+        model=model,
         temperature=float(scenario_config.feedback_2_temperature),
         messages=[{"role": "system", "content": scenario_config.feedback_2_prompt}] + state.tutor_feedbacks,
     )

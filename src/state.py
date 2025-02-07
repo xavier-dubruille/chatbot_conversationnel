@@ -49,4 +49,4 @@ def get_state(session) -> State:
 
 def is_tutor_activated(state: State) -> bool:
     """ temporaire et bricolage pour savoir si l'agent 'tuteur" est deactivate """
-    return state.scenario_id != 1
+    return state.scenario_id != 12
