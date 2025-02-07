@@ -20,8 +20,8 @@ def render_feedback(last_user_message, feedback, id_to_swap, swap_method='before
     feedback_md = NotStr(markdown.markdown(feedback))
     return Div(
         Div(
-            Span(last_user_message, cls="rounded-lg px-2",
-                 style="position:absolute; top:0; left:0; background:#4a00ff; color:#d1dbff"),
+            # Span(last_user_message, cls="rounded-lg px-2",
+            #      style="position:absolute; top:0; left:0; background:#4a00ff; color:#d1dbff"),
             Div(feedback_md, cls="max-w-sm mx-auto p-6 bg-pink-100 rounded-lg shadow-lg border border-pink-200 my-2"),
             style="position:relative"
         ),

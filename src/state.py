@@ -45,3 +45,8 @@ def get_state(session) -> State:
         _states[session['session_id']] = State(messages=[], tutor_feedbacks=[])
 
     return _states.get(session['session_id'])
+
+
+def is_tutor_activated(state: State) -> bool:
+    """ temporaire et bricolage pour savoir si l'agent 'tuteur" est deactivate """
+    return state.scenario_id != 1

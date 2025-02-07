@@ -7,7 +7,7 @@ from connected_user import ConnectedUser
 from db_utils import save_chat_message_to_db
 from open_ai_stuff import cli
 # from open-ai_stuff import ++++++
-from state import get_state
+from state import get_state, is_tutor_activated
 from tutor_utils import render_feedback, ask_tutor, ask_history_tutor, feedback_on_all_messages, resume_feedback
 
 current_timestamp = int(time.time())
@@ -76,6 +76,7 @@ def get(scenario_id: int, session, request):
 
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
+    totor_title = "Tutor" if is_tutor_activated(state) else "Tutor (deactivated)"
     page = Body(Grid(H1(A(scenario_config.scenario_name, href='/'), cls="text-2xl font-bold mb-4", id="titre"),
                      Div() if user.is_student else Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
                                                          cls="text-blue-500 hover:text-blue-700 underline"),
@@ -85,7 +86,7 @@ def get(scenario_id: int, session, request):
                         cls="card bg-base-300 rounded-box basis-[75%] "),
                     Div(cls="divider divider-horizontal"),
 
-                    Div(Div(H1("Tutor (deactivated)", style=sub_title_style),
+                    Div(Div(H1(totor_title, style=sub_title_style),
                             Div("", id="tutor_history_content"),
                             cls='card bg-base-300 rounded-box ',
                             style="width:100%; height:100%"
@@ -172,9 +173,11 @@ async def ws(msg: str, send, scope):
     # await send(feedback_rendered)
 
     # tmp disable it ...
-    # feedback = await ask_history_tutor(state)
-    # feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
-    # await send(feedback_rendered)
+    if is_tutor_activated(state):
+        feedback = await ask_history_tutor(state)
+        print(f"feedback x: {feedback}")
+        feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
+        await send(feedback_rendered)
 
     # feedback = await feedback_on_all_messages(state)
     # feedback_rendered = render_feedback("last: " + last_user_message, feedback, ID_FEEDBACK_3, 'true')
