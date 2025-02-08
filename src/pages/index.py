@@ -52,6 +52,7 @@ def get(session, request):
 
 def ScenarioButton(scenario: ScenarioConfig, user, no_delete_button=False):
     return Div(
+        Div(scenario.description,  style="margin-top: 25px"),
         A(f"{scenario.scenario_name}",
           href=f'/s/{scenario.id}',
           style="width: 700px",
