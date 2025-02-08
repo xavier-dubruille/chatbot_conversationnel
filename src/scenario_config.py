@@ -92,7 +92,7 @@ def get_attribute_descriptions(category_name="all"):
     for fi in fields(ScenarioConfig):
         description = fi.metadata.get("description", "No description provided")
         category = fi.metadata.get("category", "main")
-        if category_name == "all" or category == category_name:
+        if (category_name == "all" or category == category_name) and fi.name != "feedback_2_use_history":
             attribute_descriptions.append((fi.name, description))
     return attribute_descriptions
 
