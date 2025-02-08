@@ -73,18 +73,18 @@ def get(scenario_id: int, session):
                     Accordion("'Role' configurations",
                               Div(*[make_config_line(k, v, scenario_config) for k, v in
                                     get_attribute_descriptions(ROLE_CAT)])),
-                    Accordion("First 'Feedback window' configurations",
-                              Div(*[make_config_line(k, v, scenario_config) for k, v in
-                                    get_attribute_descriptions(FEEDBACK1_CAT)])),
-                    Accordion("Second 'Feedback window' configurations",
+                    # Accordion("First 'Feedback window' configurations",
+                    #           Div(*[make_config_line(k, v, scenario_config) for k, v in
+                    #                 get_attribute_descriptions(FEEDBACK1_CAT)])),
+                    Accordion("'Tutor' configurations",
                               Div(*[make_config_line(k, v, scenario_config) for k, v in
                                     get_attribute_descriptions(FEEDBACK2_CAT)])),
-                    Accordion("First 'Resume window' configurations",
-                              Div(*[make_config_line(k, v, scenario_config) for k, v in
-                                    get_attribute_descriptions(RESUME1_CAT)])),
-                    Accordion("Second 'Resume window' configurations",
-                              Div(*[make_config_line(k, v, scenario_config) for k, v in
-                                    get_attribute_descriptions(RESUME2_CAT)])),
+                    # Accordion("First 'Resume window' configurations",
+                    #           Div(*[make_config_line(k, v, scenario_config) for k, v in
+                    #                 get_attribute_descriptions(RESUME1_CAT)])),
+                    # Accordion("Second 'Resume window' configurations",
+                    #           Div(*[make_config_line(k, v, scenario_config) for k, v in
+                    #                 get_attribute_descriptions(RESUME2_CAT)])),
 
                     Div(Button("Save", type="submit",
                                cls="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition"),
