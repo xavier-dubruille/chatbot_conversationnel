@@ -62,21 +62,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const container = document.getElementById("chatlist");
+    const container_tutor = document.getElementById("tutor_history_content");
+
 
     // Fonction pour faire défiler en bas
-    function scrollToBottom() {
-        container.scrollTop = container.scrollHeight;
+    function scrollToBottom(what) {
+        what.scrollTop = what.scrollHeight;
         setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
+            what.scrollTop = what.scrollHeight;
         }, 1100); // Petit délai pour laisser le DOM se mettre à jour
     }
 
 // Observer les ajouts d'éléments dans la div
     const observer = new MutationObserver(() => {
-        scrollToBottom();
+        scrollToBottom(container);
     });
-
     observer.observe(container, {childList: true});
+
+
+    const observer_tutor = new MutationObserver(() => {
+        scrollToBottom(container_tutor);
+    });
+    observer_tutor.observe(container_tutor, {childList: true});
 
 
     console.log("Les écouteurs d'événements ont été ajoutés !");
