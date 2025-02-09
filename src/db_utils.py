@@ -100,12 +100,15 @@ def create_chat_message_table():
             raise HTTPException(e)
 
 
-def save_chat_message_to_db(user_name: str, assistant_msg, user_msg,
+def save_chat_message_to_db(user_name: str,
+                            scenario_id: int,
+                            assistant_msg, user_msg,
                             assistant_started_timestamp,
                             assistant_finished_ts,
                             user_finished_ts):
     if os.getenv("SKIP_DB_INSERT", False):
-        print(f'(DEBUG)  user:{user_name},  assitant_msg:{assistant_msg}, user_msg : {user_msg}, '
+        print(f'(DEBUG)  user:{user_name}, scenario_id: {scenario_id} '
+              f'assitant_msg:{assistant_msg}, user_msg : {user_msg}, '
               f'assisstant_end_ts:{assistant_finished_ts},'
               f'user_finished_ts:{user_finished_ts}')
         print("Don't insert those messages in database ...")
@@ -114,15 +117,19 @@ def save_chat_message_to_db(user_name: str, assistant_msg, user_msg,
         try:
             with conn.cursor() as cur:
                 query = """
-                INSERT INTO chat_message (user_name, assistant_msg, user_msg, start_assistant_timestamp, finished_assistant_timestamp, finished_user_timestamp) 
-                VALUES (%s, %s, %s,%s, %s, %s)
+                INSERT INTO chat_message (user_name, scenario_id, assistant_msg, user_msg, start_assistant_timestamp, finished_assistant_timestamp, finished_user_timestamp) 
+                VALUES (%s, %s, %s, %s,%s, %s, %s)
                 """
                 # print("(debug) query: " + query)
                 cur.execute(query, (
-                    user_name, assistant_msg, user_msg, assistant_started_timestamp, assistant_finished_ts,
+                    user_name, scenario_id, assistant_msg, user_msg, assistant_started_timestamp, assistant_finished_ts,
                     user_finished_ts))
             conn.commit()
         except Exception as e:
             conn.rollback()
             # faudrait une autre exception !
             raise HTTPException(e)
+
+def get_messages_counts():
+    # user / scenario / count / last ts
+    pass

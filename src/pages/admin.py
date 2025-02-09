@@ -2,6 +2,7 @@ from fasthtml.common import *
 
 import apps
 from config import get_scenario_config
+from db_utils import get_messages_counts
 from scenario_config import *
 from scenario_to_db import *
 from state import get_state
@@ -21,6 +22,11 @@ def update_scenario_config(scenario_id: int, scenario: ScenarioConfig):
     scenario.id = scenario_id
     update_scenario(scenario)
     return Redirect(f"/s/{scenario_id}/admin")
+
+
+@app.route("/admin/stats")
+def get():
+    everything = get_messages_counts()
 
 
 def make_config_line(key: str, description: str, scenario: ScenarioConfig):

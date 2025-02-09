@@ -128,6 +128,7 @@ async def ws(msg: str, send, scope):
     scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
     user = ConnectedUser(scope)
     save_chat_message_to_db(user.user_name,
+                            scenario_config.id,
                             state.last_assistant_prompt,
                             msg.rstrip(),
                             state.assistant_started_timestamp,
