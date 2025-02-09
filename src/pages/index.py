@@ -43,6 +43,10 @@ def get(session, request):
         Div(A(f'{user.user_name} - logout', href=f'/api/logout',
               cls="text-blue-500 hover:text-blue-700 underline"),
             style='text-align: right'),
+        Div() if user.is_student else
+        Div(A('stats', href=f'/admin/stats',
+              cls="text-blue-500 hover:text-blue-700 underline"),
+            style='position:absolute; bottom:0; right:0'),
         Div(*[ScenarioButton(scenario, user, len(all_scenarios) == 1) for scenario in all_scenarios.values() if
               user.can_see_scenario(scenario.scenario_name)],
             cls="flex flex-col items-center justify-center h-screen bg-gray-100")
@@ -52,7 +56,7 @@ def get(session, request):
 
 def ScenarioButton(scenario: ScenarioConfig, user, no_delete_button=False):
     return Div(
-        Div(scenario.description,  style="margin-top: 25px"),
+        Div(scenario.description, style="margin-top: 25px"),
         A(f"{scenario.scenario_name}",
           href=f'/s/{scenario.id}',
           style="width: 700px",

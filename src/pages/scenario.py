@@ -173,10 +173,9 @@ async def ws(msg: str, send, scope):
     # feedback_rendered = render_feedback(last_user_message, feedback, "tutor_content")
     # await send(feedback_rendered)
 
-    # tmp disable it ...
     if is_tutor_activated(state):
         feedback = await ask_history_tutor(state)
-        print(f"feedback x: {feedback}")
+        # print(f"feedback x: {feedback}")
         feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
         await send(feedback_rendered)
 

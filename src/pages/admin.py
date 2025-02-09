@@ -26,7 +26,11 @@ def update_scenario_config(scenario_id: int, scenario: ScenarioConfig):
 
 @app.route("/admin/stats")
 def get():
+    style = Style(
+        "table {width: 100%;border-collapse: collapse;border-radius: 8px;overflow: hidden;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);} th, td {padding: 12px 15px;text-align: left;} th {background-color: #007bff; color: white; text-transform: uppercase; font-weight: bold;} tr:nth-child(even) { background-color: #f8f9fa;} tr:hover { background-color: #e9ecef;} td { border-bottom: 1px solid #dee2e6;} /* Ajout d'un effet aux premières colonnes */ td:first-child, th:first-child { border-left: 4px solid #007bff;} ")
+
     everything = get_messages_counts()
+    return Html(Body(NotStr(everything)), headers=(style))
 
 
 def make_config_line(key: str, description: str, scenario: ScenarioConfig):

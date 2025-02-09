@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 from http.client import HTTPException
 from typing import List
-
+import pandas as pd
 import psycopg2
 from dotenv import load_dotenv
 
@@ -130,6 +130,47 @@ def save_chat_message_to_db(user_name: str,
             # faudrait une autre exception !
             raise HTTPException(e)
 
+
 def get_messages_counts():
-    # user / scenario / count / last ts
-    pass
+    with get_db() as conn:
+        query = """
+        WITH message_intervals AS (
+            SELECT 
+                user_name,
+                scenario_id,
+                finished_user_timestamp,
+                LAG(finished_user_timestamp) OVER (
+                    PARTITION BY user_name, scenario_id ORDER BY finished_user_timestamp
+                ) AS previous_timestamp
+            FROM public.chat_message
+        ), time_diffs AS (
+            SELECT 
+                user_name,
+                scenario_id,
+                finished_user_timestamp,
+                ROUND(finished_user_timestamp - previous_timestamp) AS time_diff
+            FROM message_intervals
+            WHERE previous_timestamp IS NOT NULL
+        )
+        SELECT 
+            cm.user_name,
+            cm.scenario_id,
+            COUNT(*) AS message_count,
+            ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY td.time_diff)) AS second_between_messages,
+            TO_CHAR(TO_TIMESTAMP(MIN(cm.finished_user_timestamp)), 'DD-MM-YYYY HH24:MI') AS start,
+            TO_CHAR(TO_TIMESTAMP(MAX(cm.finished_user_timestamp)), 'DD-MM-YYYY HH24:MI') AS end,
+            ROUND((EXTRACT(EPOCH FROM NOW()) - MAX(cm.finished_user_timestamp)) / 60) AS finished_minutes_ago
+        FROM public.chat_message cm
+        LEFT JOIN time_diffs td 
+            ON cm.user_name = td.user_name AND cm.scenario_id = td.scenario_id
+        GROUP BY cm.user_name, cm.scenario_id
+        ORDER BY finished_minutes_ago ASC NULLS LAST;
+        """
+
+        # Exécution de la requête et récupération des résultats dans un DataFrame pandas
+        df = pd.read_sql_query(query, conn)
+
+        # Génération du tableau HTML
+        html_table = df.to_html(index=True, escape=False, border=1)
+
+        return html_table

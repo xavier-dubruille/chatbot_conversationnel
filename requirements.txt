@@ -6,3 +6,4 @@ Markdown~=3.7
 psycopg_pool
 psycopg_binary
 psycopg
+pandas
