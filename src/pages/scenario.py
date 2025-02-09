@@ -77,48 +77,48 @@ def get(scenario_id: int, session, request):
     sub_title_style = "position:relative; margin:8px; font-size:29px"
 
     totor_title = "Tutor" if is_tutor_activated(state) else "Tutor (deactivated)"
-    page = Body(Grid(H1(A(scenario_config.scenario_name, href='/'), cls="text-2xl font-bold mb-4", id="titre"),
-                     Div() if user.is_student else Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
-                                                         cls="text-blue-500 hover:text-blue-700 underline"),
-                                                       style='text-align: right'),
-                     cls="m-3"),
-                Div(Div(*chat_elements,
-                        cls="card bg-base-300 rounded-box basis-[75%] "),
-                    Div(cls="divider divider-horizontal"),
+    page = Body(
 
-                    Div(Div(H1(totor_title, style=sub_title_style),
-                            Div("", id="tutor_history_content"),
-                            cls='card bg-base-300 rounded-box ',
-                            style="width:100%; height:100%"
-                            ),
-                        # Div(cls="divider divider-vertical"),
-                        # Div(H1("Summary all messages", style=sub_title_style),
-                        #     Div("", id=ID_FEEDBACK_3),
-                        #     cls='card bg-base-300 rounded-box',
-                        #     style="width:100%; height:100%"
-                        #     ),
-                        cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
-                        style='display: flex; flex-direction: column; justify-content: center'
+        Div(
+            Grid(H1(A(scenario_config.scenario_name, href='/'), cls="text-2xl font-bold mb-4", id="titre"),
+                 Div() if user.is_student else Div(A('Configure Me', href=f'/s/{scenario_id}/admin',
+                                                     cls="text-blue-500 hover:text-blue-700 underline"),
+                                                   style='text-align: right'),
+                 cls="m-3"),
+            Div(Div(*chat_elements,
+                    cls="card bg-base-300 rounded-box basis-[75%] "),
+                Div(cls="divider divider-horizontal"),
+
+                Div(Div(H1(totor_title, style=sub_title_style),
+                        Div("", id="tutor_history_content", style="overflow-y: auto; box-sizing: border-box"),
+                        cls='card bg-base-300 rounded-box',
+                        style="flex-grow:1; width:100%; height:100%;"  # overflow-y: auto; box-sizing: border-box"
                         ),
+                    cls='flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto',
+                    style='flex-grow:1; overflow-y: auto; box-sizing: border-box; height: 84vh;'
+                    # display: flex; flex-direction: column; justify-content: center'
+                    ),
 
-                    # Div(cls="divider divider-horizontal"),
-                    # Div(Div(H1("Feedback No History", style=sub_title_style),
-                    #         Div("", id="tutor_content"),
-                    #         cls='card bg-base-300 rounded-box ',
-                    #         style="width:100%; height:100%"
-                    #         ),
-                    #     Div(cls="divider divider-vertical"),
-                    #     Div(H1("Summary all feedbacks", style=sub_title_style),
-                    #         Div("", id=ID_FEEDBACK_4),
-                    #         cls='card bg-base-300 rounded-box',
-                    #         style="width:100%; height:100%"
-                    #         ),
-                    #     cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
-                    #     style='display: flex; flex-direction: column; justify-content: center'
-                    #     ),
+                # Div(cls="divider divider-horizontal"),
+                # Div(Div(H1("Feedback No History", style=sub_title_style),
+                #         Div("", id="tutor_content"),
+                #         cls='card bg-base-300 rounded-box ',
+                #         style="width:100%; height:100%"
+                #         ),
+                #     Div(cls="divider divider-vertical"),
+                #     Div(H1("Summary all feedbacks", style=sub_title_style),
+                #         Div("", id=ID_FEEDBACK_4),
+                #         cls='card bg-base-300 rounded-box',
+                #         style="width:100%; height:100%"
+                #         ),
+                #     cls='grid flex-grow place-items-center basis-[35%] grow-0 shrink-0 overflow-y-auto ',
+                #     style='display: flex; flex-direction: column; justify-content: center'
+                #     ),
 
-                    cls="flex flex-row w-full p-3")
-                )
+                cls="flex flex-row w-full p-3")
+        ),
+        style='height:100vh'
+    )
     return Title(scenario_config.scenario_name), page
 
 
