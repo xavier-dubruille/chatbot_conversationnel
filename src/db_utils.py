@@ -121,11 +121,36 @@ def save_chat_message_to_db(user_name: str,
                 query = """
                 INSERT INTO chat_message (user_name, scenario_id, assistant_msg, user_msg, start_assistant_timestamp, finished_assistant_timestamp, finished_user_timestamp) 
                 VALUES (%s, %s, %s, %s,%s, %s, %s)
+                RETURNING id
                 """
                 # print("(debug) query: " + query)
                 cur.execute(query, (
                     user_name, scenario_id, assistant_msg, user_msg, assistant_started_timestamp, assistant_finished_ts,
                     user_finished_ts))
+                inserted_id = cur.fetchone()[0]
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            # faudrait une autre exception !
+            raise HTTPException(e)
+        return inserted_id
+
+
+def save_feedback_to_db(feedback_msg: str, chat_id: int):
+    skip = ("True" == os.getenv("SKIP_DB_INSERT"))
+    if skip:
+        print(f'(DEBUG)  chat_id: {chat_id} feedback: {feedback_msg}')
+        print("Don't insert those messages in database ...")
+        return
+    with get_db() as conn:
+        try:
+            with conn.cursor() as cur:
+                query = """
+                INSERT INTO feedback_message (feedback_message, chat_message_id) 
+                VALUES (%s, %s)
+                """
+                # print("(debug) query: " + query)
+                cur.execute(query, (feedback_msg, chat_id))
             conn.commit()
         except Exception as e:
             conn.rollback()

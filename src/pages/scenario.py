@@ -4,7 +4,7 @@ import time
 import apps
 from config import *
 from connected_user import ConnectedUser
-from db_utils import save_chat_message_to_db
+from db_utils import save_chat_message_to_db, save_feedback_to_db
 from open_ai_stuff import cli
 # from open-ai_stuff import ++++++
 from state import get_state, is_tutor_activated
@@ -127,13 +127,13 @@ async def ws(msg: str, send, scope):
     state = get_state(scope.session)
     scenario_config: ScenarioConfig = get_scenario_config(state.scenario_id)
     user = ConnectedUser(scope)
-    save_chat_message_to_db(user.user_name,
-                            scenario_config.id,
-                            state.last_assistant_prompt,
-                            msg.rstrip(),
-                            state.assistant_started_timestamp,
-                            state.assistant_finished_timestamp,
-                            time.time())
+    chat_id = save_chat_message_to_db(user.user_name,
+                                      scenario_config.id,
+                                      state.last_assistant_prompt,
+                                      msg.rstrip(),
+                                      state.assistant_started_timestamp,
+                                      state.assistant_finished_timestamp,
+                                      time.time())
     state.messages.append({"role": "user", "content": msg.rstrip()})
     swap = 'beforeend'
 
@@ -176,6 +176,7 @@ async def ws(msg: str, send, scope):
     if is_tutor_activated(state):
         feedback = await ask_history_tutor(state)
         # print(f"feedback x: {feedback}")
+        save_feedback_to_db(feedback, chat_id)
         feedback_rendered = render_feedback(last_user_message, feedback, "tutor_history_content")
         await send(feedback_rendered)
 
