@@ -27,6 +27,10 @@ def get(scenario_id: int):
 
 @app.route("/s/{scenario_id}/delete")
 def get(scenario_id: int):
+    # todo: secure this endpoint
+    # user = ConnectedUser(session)
+    # if user.is_student:
+    #     return Redirect("/")
     delete_scenario(ScenarioConfig(id=scenario_id))
     return Redirect("/")
 

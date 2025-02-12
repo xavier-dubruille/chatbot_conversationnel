@@ -32,7 +32,8 @@ def get_db():
 
 
 def insert_keystroke_in_db(user: str, keystrokes: List[KeyStoke]):
-    if os.getenv("SKIP_DB_INSERT", False):
+    skip = ("True" == os.getenv("SKIP_DB_INSERT"))
+    if skip:
         print(f"{keystrokes}")
         print("Don't insert those keystrokes in database ...")
         return
@@ -106,7 +107,8 @@ def save_chat_message_to_db(user_name: str,
                             assistant_started_timestamp,
                             assistant_finished_ts,
                             user_finished_ts):
-    if os.getenv("SKIP_DB_INSERT", False):
+    skip = ("True" == os.getenv("SKIP_DB_INSERT"))
+    if skip:
         print(f'(DEBUG)  user:{user_name}, scenario_id: {scenario_id} '
               f'assitant_msg:{assistant_msg}, user_msg : {user_msg}, '
               f'assisstant_end_ts:{assistant_finished_ts},'

@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("DOM entièrement chargé, script prêt !");
 
     const keystrokes = [];
-    const SERVER_URL = "/api/keystrokes";
+    const KEYSTROKE_ENDPOINT = "/api/keystrokes";
 
     const inputElement = document.getElementById("msg-input-wrapper");
     const sendButton = document.getElementById("send_input");
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch(SERVER_URL, {
+            const response = await fetch(KEYSTROKE_ENDPOINT, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const container = document.getElementById("chatlist");
+    const chatlist_container = document.getElementById("chatlist");
     const container_tutor = document.getElementById("tutor_history_content");
 
 
@@ -75,9 +75,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Observer les ajouts d'éléments dans la div
     const observer = new MutationObserver(() => {
-        scrollToBottom(container);
+        scrollToBottom(chatlist_container);
     });
-    observer.observe(container, {childList: true});
+    observer.observe(chatlist_container, {childList: true});
 
 
     const observer_tutor = new MutationObserver(() => {
