@@ -1,9 +1,9 @@
 python-fasthtml
 uvicorn>=0.29
 python-dotenv~=1.0.1
-openai~=1.54.4
+openai~=1.64.0
 Markdown~=3.7
 psycopg_pool
 psycopg_binary
-psycopg
+psycopg2~=2.9.10
 pandas
