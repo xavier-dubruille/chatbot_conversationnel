@@ -13,6 +13,7 @@ load_dotenv()
 postgres_user = os.getenv("postgres_user")
 postgres_password = os.getenv("postgres_password")
 postgres_database = os.getenv("postgres_database")
+postgres_port = os.getenv("postgres_port", "5432")
 
 
 @contextmanager
@@ -23,7 +24,7 @@ def get_db():
         user=postgres_user,
         password=postgres_password,
         host="127.0.0.1",
-        port=5432
+        port=postgres_port
     )
     try:
         yield conn
